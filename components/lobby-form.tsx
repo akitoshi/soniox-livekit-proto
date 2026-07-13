@@ -22,11 +22,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  SONIOX_LANGUAGES,
+  isSonioxLanguageCode,
+  type SonioxLanguageCode,
+} from "@/lib/languages";
+
+type ParticipantRole = "doctor" | "patient";
 
 export function LobbyForm({ initialRoomName }: { initialRoomName: string }) {
   const router = useRouter();
   const [roomName, setRoomName] = useState(initialRoomName);
   const [displayName, setDisplayName] = useState("");
+  const [role, setRole] = useState<ParticipantRole>("patient");
+  const [patientLanguage, setPatientLanguage] = useState<SonioxLanguageCode>("en");
   const [isPreparing, setIsPreparing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,8 +70,16 @@ export function LobbyForm({ initialRoomName }: { initialRoomName: string }) {
       stream.getTracks().forEach((track) => track.stop());
 
       sessionStorage.setItem("consultation-display-name", safeDisplayName);
+      sessionStorage.setItem("consultation-role", role);
+      sessionStorage.setItem("consultation-language", patientLanguage);
+
+      const query = new URLSearchParams({
+        name: safeDisplayName,
+        role,
+        lang: patientLanguage,
+      });
       router.push(
-        `/room/${encodeURIComponent(safeRoomName)}?name=${encodeURIComponent(safeDisplayName)}`,
+        `/room/${encodeURIComponent(safeRoomName)}?${query.toString()}`,
       );
     } catch (caughtError) {
       const message =
@@ -77,7 +94,7 @@ export function LobbyForm({ initialRoomName }: { initialRoomName: string }) {
   }
 
   return (
-    <main className="relative min-h-[100dvh] overflow-hidden">
+    <main className="relative min-h-[100dvh] overflow-x-hidden">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,color-mix(in_oklab,var(--primary)_12%,transparent),transparent_34%),linear-gradient(to_bottom_right,transparent_45%,color-mix(in_oklab,var(--accent)_44%,transparent))]" />
 
       <div className="relative mx-auto grid min-h-[100dvh] w-full max-w-6xl items-center gap-12 px-5 py-10 md:grid-cols-[1.08fr_0.92fr] md:px-10 md:py-16">
@@ -167,6 +184,60 @@ export function LobbyForm({ initialRoomName }: { initialRoomName: string }) {
                   maxLength={50}
                   disabled={isPreparing}
                 />
+              </div>
+
+              <fieldset className="space-y-2">
+                <legend className="text-sm font-semibold">ロール</legend>
+                <div className="grid grid-cols-2 gap-2" role="group" aria-label="ロールを選択">
+                  <Button
+                    type="button"
+                    variant={role === "doctor" ? "secondary" : "outline"}
+                    aria-label="医師として参加"
+                    aria-pressed={role === "doctor"}
+                    onClick={() => setRole("doctor")}
+                    disabled={isPreparing}
+                  >
+                    医師
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={role === "patient" ? "secondary" : "outline"}
+                    aria-label="患者として参加"
+                    aria-pressed={role === "patient"}
+                    onClick={() => setRole("patient")}
+                    disabled={isPreparing}
+                  >
+                    患者
+                  </Button>
+                </div>
+                <p className="text-xs leading-5 text-muted-foreground">
+                  このロールは認証を伴わない自己申告です。
+                </p>
+              </fieldset>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold" htmlFor="patient-language">
+                  {role === "doctor" ? "患者の言語" : "あなたの言語 / Your language"}
+                </label>
+                <select
+                  id="patient-language"
+                  name="patientLanguage"
+                  value={patientLanguage}
+                  onChange={(event) => {
+                    if (isSonioxLanguageCode(event.target.value)) {
+                      setPatientLanguage(event.target.value);
+                    }
+                  }}
+                  disabled={isPreparing}
+                  aria-label={role === "doctor" ? "患者の言語" : "あなたの言語 / Your language"}
+                  className="h-11 w-full rounded-xl border border-input bg-background px-3.5 py-2 text-base text-foreground shadow-sm outline-none transition-[border-color,box-shadow] focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/25 disabled:pointer-events-none disabled:opacity-50 md:text-sm"
+                >
+                  {SONIOX_LANGUAGES.map((language) => (
+                    <option key={language.code} value={language.code}>
+                      {language.nativeName} ({language.jaName})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="rounded-xl border border-border bg-muted/55 p-4">

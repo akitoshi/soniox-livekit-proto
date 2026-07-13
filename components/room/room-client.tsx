@@ -14,11 +14,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { isSonioxLanguageCode } from "@/lib/languages";
 import { cn } from "@/lib/utils";
 
 type RoomClientProps = {
   roomName: string;
   displayName: string;
+  role: string;
+  patientLanguage: string;
 };
 
 type TokenResponse = {
@@ -35,9 +38,16 @@ type ConnectionConfig = {
   identity: string;
 };
 
-export function RoomClient({ roomName, displayName }: RoomClientProps) {
+export function RoomClient({
+  roomName,
+  displayName,
+  role,
+  patientLanguage,
+}: RoomClientProps) {
   const [config, setConfig] = useState<ConnectionConfig | null>(null);
   const [error, setError] = useState<TokenResponse | null>(null);
+  const safeRole = role === "doctor" || role === "patient" ? role : "patient";
+  const safePatientLanguage = isSonioxLanguageCode(patientLanguage) ? patientLanguage : "en";
 
   useEffect(() => {
     if (!displayName) return;
@@ -108,6 +118,8 @@ export function RoomClient({ roomName, displayName }: RoomClientProps) {
       video={{ facingMode: "user" }}
       options={{ adaptiveStream: true, dynacast: true }}
       data-lk-theme="default"
+      data-participant-role={safeRole}
+      data-patient-language={safePatientLanguage}
       onError={(liveKitError) => setError({ message: liveKitError.message })}
     >
       <ConsultationRoom
