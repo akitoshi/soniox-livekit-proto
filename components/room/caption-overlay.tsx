@@ -9,14 +9,36 @@ type CaptionOverlayProps = {
   enabled: boolean;
   finalCaptions: CaptionPayload[];
   interimCaptions: CaptionPayload[];
+  localParticipantIdentity: string;
 };
 
 const CAPTION_VISIBLE_MS = 12_000;
+
+function getCaptionPresentation(caption: CaptionPayload, isLocal: boolean) {
+  const showTranslationAsMain = !isLocal && Boolean(caption.translation);
+  const mainText = showTranslationAsMain
+    ? caption.translation ?? caption.text
+    : caption.text || caption.translation || "";
+  const secondaryText = showTranslationAsMain
+    ? caption.text || null
+    : caption.text && caption.translation
+      ? caption.translation
+      : null;
+
+  return {
+    mainText,
+    mainLanguage: showTranslationAsMain ? caption.translationLang : caption.lang,
+    secondaryText,
+    secondaryLanguage: showTranslationAsMain ? caption.lang : caption.translationLang,
+    secondaryLabel: showTranslationAsMain ? "原文" : "翻訳",
+  };
+}
 
 export function CaptionOverlay({
   enabled,
   finalCaptions,
   interimCaptions,
+  localParticipantIdentity,
 }: CaptionOverlayProps) {
   const [now, setNow] = useState(() => Date.now());
 
@@ -42,30 +64,45 @@ export function CaptionOverlay({
       aria-live="polite"
       aria-atomic="false"
     >
-      {captions.map((caption) => (
-        <div
-          key={`${caption.participantIdentity}-${caption.timestamp}-${caption.isFinal}`}
-          className={cn(
-            "max-w-full animate-[caption-in_180ms_ease-out] rounded-xl border border-white/10 bg-slate-950/82 px-4 py-2.5 text-center text-sm text-slate-50 shadow-lg backdrop-blur-md md:text-base",
-            !caption.isFinal && "text-slate-200/65",
-          )}
-        >
-          <div>
-            <span className="mr-2 font-semibold text-teal-200">{caption.participantName}</span>
-            <span>{caption.text}</span>
-          </div>
-          {caption.translation ? (
-            <div className="mt-1 border-t border-white/10 pt-1.5 text-slate-50">
-              {caption.translationLang ? (
+      {captions.map((caption) => {
+        const presentation = getCaptionPresentation(
+          caption,
+          caption.participantIdentity === localParticipantIdentity,
+        );
+
+        return (
+          <div
+            key={`${caption.participantIdentity}-${caption.timestamp}-${caption.isFinal}`}
+            className={cn(
+              "max-w-full animate-[caption-in_180ms_ease-out] rounded-xl border border-white/10 bg-slate-950/82 px-4 py-2.5 text-center text-sm text-slate-50 shadow-lg backdrop-blur-md md:text-base",
+              !caption.isFinal && "text-slate-300/65",
+            )}
+          >
+            <div>
+              <span className="mr-2 font-semibold text-teal-200">
+                {caption.participantName}
+              </span>
+              {presentation.mainLanguage ? (
                 <span className="mr-2 font-mono text-[10px] font-semibold uppercase text-teal-200/80">
-                  {caption.translationLang}
+                  {presentation.mainLanguage}
                 </span>
               ) : null}
-              <span>{caption.translation}</span>
+              <span>{presentation.mainText}</span>
             </div>
-          ) : null}
-        </div>
-      ))}
+            {presentation.secondaryText ? (
+              <div className="mt-1 border-t border-white/10 pt-1.5 text-xs leading-5 text-slate-400 md:text-sm">
+                <span className="mr-2 font-semibold text-slate-500">
+                  {presentation.secondaryLabel}
+                  {presentation.secondaryLanguage
+                    ? ` ${presentation.secondaryLanguage}`
+                    : ""}
+                </span>
+                <span>{presentation.secondaryText}</span>
+              </div>
+            ) : null}
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -191,6 +191,7 @@ export function ConsultationRoom({
             enabled={captionsEnabled}
             finalCaptions={finalCaptions}
             interimCaptions={interimCaptions}
+            localParticipantIdentity={participantIdentity}
           />
 
           {sonioxError || controlError ? (
@@ -284,7 +285,11 @@ export function ConsultationRoom({
         <RoomAudioRenderer />
       </div>
 
-      <CaptionHistory finalCaptions={finalCaptions} interimCaptions={interimCaptions} />
+      <CaptionHistory
+        finalCaptions={finalCaptions}
+        interimCaptions={interimCaptions}
+        localParticipantIdentity={participantIdentity}
+      />
     </Sheet>
   );
 }

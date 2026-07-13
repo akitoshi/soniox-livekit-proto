@@ -15,7 +15,56 @@ import type { CaptionPayload } from "@/hooks/use-caption-channel";
 type CaptionHistoryProps = {
   finalCaptions: CaptionPayload[];
   interimCaptions: CaptionPayload[];
+  localParticipantIdentity: string;
 };
+
+function getCaptionPresentation(caption: CaptionPayload, isLocal: boolean) {
+  const showTranslationAsMain = !isLocal && Boolean(caption.translation);
+  const mainText = showTranslationAsMain
+    ? caption.translation ?? caption.text
+    : caption.text || caption.translation || "";
+  const secondaryText = showTranslationAsMain
+    ? caption.text || null
+    : caption.text && caption.translation
+      ? caption.translation
+      : null;
+
+  return {
+    mainText,
+    mainLanguage: showTranslationAsMain ? caption.translationLang : caption.lang,
+    secondaryText,
+    secondaryLanguage: showTranslationAsMain ? caption.lang : caption.translationLang,
+    secondaryLabel: showTranslationAsMain ? "原文" : "翻訳",
+  };
+}
+
+function CaptionText({
+  caption,
+  isLocal,
+}: {
+  caption: CaptionPayload;
+  isLocal: boolean;
+}) {
+  const presentation = getCaptionPresentation(caption, isLocal);
+
+  return (
+    <>
+      <p className="text-sm leading-6 text-foreground/90">{presentation.mainText}</p>
+      {presentation.secondaryText ? (
+        <div className="mt-2 flex gap-2 rounded-lg bg-primary/8 p-2.5 text-xs leading-5 text-muted-foreground">
+          <Translate className="mt-0.5 shrink-0 text-primary/75" size={15} weight="bold" />
+          <div>
+            <p className="mb-0.5 font-mono text-[10px] font-semibold uppercase text-muted-foreground">
+              {presentation.secondaryLabel}
+              {presentation.secondaryLanguage ? ` ${presentation.secondaryLanguage}` : ""}
+            </p>
+            <p>{presentation.secondaryText}</p>
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
+}
 
 function formatTime(timestamp: number) {
   return new Intl.DateTimeFormat("ja-JP", {
@@ -25,7 +74,11 @@ function formatTime(timestamp: number) {
   }).format(timestamp);
 }
 
-export function CaptionHistory({ finalCaptions, interimCaptions }: CaptionHistoryProps) {
+export function CaptionHistory({
+  finalCaptions,
+  interimCaptions,
+  localParticipantIdentity,
+}: CaptionHistoryProps) {
   return (
     <SheetContent>
       <SheetHeader>
@@ -49,31 +102,30 @@ export function CaptionHistory({ finalCaptions, interimCaptions }: CaptionHistor
           </div>
         ) : (
           <div className="space-y-5 py-4">
-            {finalCaptions.map((caption, index) => (
-              <article key={`${caption.participantIdentity}-${caption.timestamp}-${index}`}>
-                <div className="mb-1.5 flex items-center gap-2">
-                  <p className="text-sm font-semibold">{caption.participantName}</p>
-                  {caption.lang ? <Badge variant="secondary">{caption.lang}</Badge> : null}
-                  <time className="ml-auto font-mono text-[11px] text-muted-foreground">
-                    {formatTime(caption.timestamp)}
-                  </time>
-                </div>
-                <p className="text-sm leading-6 text-foreground/90">{caption.text}</p>
-                {caption.translation ? (
-                  <div className="mt-2 flex gap-2 rounded-lg bg-primary/8 p-2.5 text-sm leading-6 text-foreground">
-                    <Translate className="mt-1 shrink-0 text-primary" size={16} weight="bold" />
-                    <div>
-                      {caption.translationLang ? (
-                        <p className="mb-0.5 font-mono text-[10px] font-semibold uppercase text-muted-foreground">
-                          {caption.translationLang}
-                        </p>
-                      ) : null}
-                      <p>{caption.translation}</p>
-                    </div>
+            {finalCaptions.map((caption, index) => {
+              const presentation = getCaptionPresentation(
+                caption,
+                caption.participantIdentity === localParticipantIdentity,
+              );
+
+              return (
+                <article key={`${caption.participantIdentity}-${caption.timestamp}-${index}`}>
+                  <div className="mb-1.5 flex items-center gap-2">
+                    <p className="text-sm font-semibold">{caption.participantName}</p>
+                    {presentation.mainLanguage ? (
+                      <Badge variant="secondary">{presentation.mainLanguage}</Badge>
+                    ) : null}
+                    <time className="ml-auto font-mono text-[11px] text-muted-foreground">
+                      {formatTime(caption.timestamp)}
+                    </time>
                   </div>
-                ) : null}
-              </article>
-            ))}
+                  <CaptionText
+                    caption={caption}
+                    isLocal={caption.participantIdentity === localParticipantIdentity}
+                  />
+                </article>
+              );
+            })}
 
             {interimCaptions.map((caption) => (
               <article key={`interim-${caption.participantIdentity}`} className="opacity-60">
@@ -81,12 +133,10 @@ export function CaptionHistory({ finalCaptions, interimCaptions }: CaptionHistor
                   <p className="text-sm font-semibold">{caption.participantName}</p>
                   <Badge variant="outline">認識中</Badge>
                 </div>
-                <p className="text-sm leading-6">{caption.text}</p>
-                {caption.translation ? (
-                  <p className="mt-1.5 border-l-2 border-primary/40 pl-2.5 text-sm leading-6">
-                    {caption.translation}
-                  </p>
-                ) : null}
+                <CaptionText
+                  caption={caption}
+                  isLocal={caption.participantIdentity === localParticipantIdentity}
+                />
               </article>
             ))}
           </div>
