@@ -4,8 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import type {
   SonioxClient as SonioxClientInstance,
   SpeechToTextAPIResponse,
-  Token,
 } from "@soniox/speech-to-text-web";
+
+import type { SonioxLanguageCode } from "@/lib/languages";
+import {
+  getSonioxLanguageHints,
+  getSonioxTranslationTarget,
+  splitSonioxTokens,
+  type ParticipantRole,
+} from "@/lib/soniox-tokens";
 
 export type SonioxCaptionChunk = {
   text: string;
@@ -19,6 +26,8 @@ export type SonioxCaptionChunk = {
 type UseSonioxCaptionsOptions = {
   enabled: boolean;
   stream?: MediaStream;
+  role: ParticipantRole;
+  patientLanguage: SonioxLanguageCode;
   onCaption: (caption: SonioxCaptionChunk) => void;
 };
 
@@ -30,21 +39,12 @@ type TemporaryKeyResponse = {
 };
 
 const FINALIZE_FALLBACK_MS = 2_500;
-const END_TOKEN = "<end>";
-
-function tokensToText(tokens: Token[]) {
-  return tokens
-    .map((token) => token.text.replaceAll(END_TOKEN, ""))
-    .join("");
-}
-
-function lastLanguage(tokens: Token[]) {
-  return [...tokens].reverse().find((token) => token.language)?.language ?? null;
-}
 
 export function useSonioxCaptions({
   enabled,
   stream,
+  role,
+  patientLanguage,
   onCaption,
 }: UseSonioxCaptionsOptions) {
   const [status, setStatus] = useState<SonioxStatus>("idle");
@@ -110,32 +110,16 @@ export function useSonioxCaptions({
     const handleResult = (result: SpeechToTextAPIResponse) => {
       if (!active || !result.tokens?.length) return;
 
-      const hasEndpoint = result.tokens.some((token) => token.text.trim() === END_TOKEN);
-      const contentTokens = result.tokens.filter((token) => token.text.trim() !== END_TOKEN);
-      const originalTokens = contentTokens.filter(
-        (token) => token.translation_status !== "translation",
-      );
-      const translationTokens = contentTokens.filter(
-        (token) => token.translation_status === "translation",
-      );
+      const tokenBatch = splitSonioxTokens(result.tokens);
 
-      committedOriginal += tokensToText(originalTokens.filter((token) => token.is_final));
-      committedTranslation += tokensToText(
-        translationTokens.filter((token) => token.is_final),
-      );
-      sourceLanguage =
-        lastLanguage(originalTokens) ??
-        [...translationTokens].reverse().find((token) => token.source_language)
-          ?.source_language ??
-        sourceLanguage;
-      targetLanguage = lastLanguage(translationTokens) ?? targetLanguage;
+      committedOriginal += tokenBatch.finalOriginal;
+      committedTranslation += tokenBatch.finalTranslation;
+      sourceLanguage = tokenBatch.sourceLanguage ?? sourceLanguage;
+      targetLanguage = tokenBatch.targetLanguage ?? targetLanguage;
 
-      const originalPreview = `${committedOriginal}${tokensToText(
-        originalTokens.filter((token) => !token.is_final),
-      )}`.trim();
-      const translationPreview = `${committedTranslation}${tokensToText(
-        translationTokens.filter((token) => !token.is_final),
-      )}`.trim();
+      const originalPreview = `${committedOriginal}${tokenBatch.interimOriginal}`.trim();
+      const translationPreview =
+        `${committedTranslation}${tokenBatch.interimTranslation}`.trim();
 
       if (originalPreview || translationPreview) {
         onCaptionRef.current({
@@ -148,7 +132,7 @@ export function useSonioxCaptions({
         });
       }
 
-      if (hasEndpoint) {
+      if (tokenBatch.hasEndpoint) {
         emitFinal();
       } else {
         scheduleFinal();
@@ -177,40 +161,39 @@ export function useSonioxCaptions({
         });
 
         await client.start({
-        model: "stt-rt-v5",
-        stream,
-        languageHints: ["ja", "en"],
-        enableLanguageIdentification: true,
-        enableEndpointDetection: true,
-        context: {
-          general: [
-            { key: "domain", value: "Healthcare" },
-            { key: "topic", value: "Online medical consultation" },
-          ],
-          terms: ["オンライン診療", "既往歴", "処方薬", "アレルギー", "バイタルサイン"],
-        },
-        translation: {
-          type: "two_way",
-          language_a: "ja",
-          language_b: "en",
-        },
-        onStarted: () => {
-          if (active) {
-            setError(null);
-            setStatus("listening");
-          }
-        },
-        onPartialResult: handleResult,
-        onFinished: () => {
-          if (!active) return;
-          emitFinal();
-          setStatus("idle");
-        },
-        onError: (_errorStatus, message) => {
-          if (!active) return;
-          setStatus("error");
-          setError(message || "リアルタイム字幕でエラーが発生しました。");
-        },
+          model: "stt-rt-v5",
+          stream,
+          languageHints: getSonioxLanguageHints(patientLanguage),
+          enableLanguageIdentification: true,
+          enableEndpointDetection: true,
+          context: {
+            general: [
+              { key: "domain", value: "Healthcare" },
+              { key: "topic", value: "Online medical consultation" },
+            ],
+            terms: ["オンライン診療", "既往歴", "処方薬", "アレルギー", "バイタルサイン"],
+          },
+          translation: {
+            type: "one_way",
+            target_language: getSonioxTranslationTarget(role, patientLanguage),
+          },
+          onStarted: () => {
+            if (active) {
+              setError(null);
+              setStatus("listening");
+            }
+          },
+          onPartialResult: handleResult,
+          onFinished: () => {
+            if (!active) return;
+            emitFinal();
+            setStatus("idle");
+          },
+          onError: (_errorStatus, message) => {
+            if (!active) return;
+            setStatus("error");
+            setError(message || "リアルタイム字幕でエラーが発生しました。");
+          },
         });
       })
       .catch((caughtError: unknown) => {
@@ -228,7 +211,7 @@ export function useSonioxCaptions({
       clearFinalizeTimer();
       client?.cancel();
     };
-  }, [enabled, stream]);
+  }, [enabled, patientLanguage, role, stream]);
 
   const unsupported = enabled && Boolean(stream) && isUnsupported;
   const effectiveStatus: SonioxStatus = unsupported

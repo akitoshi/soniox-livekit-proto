@@ -10,7 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import type { CaptionPayload } from "@/types/captions";
+import type { CaptionPayload } from "@/hooks/use-caption-channel";
 
 type CaptionHistoryProps = {
   finalCaptions: CaptionPayload[];

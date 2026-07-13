@@ -9,9 +9,22 @@ import {
 } from "@/hooks/use-soniox-captions";
 import {
   CAPTION_TOPIC,
-  isCaptionPayload,
-  type CaptionPayload,
+  isCaptionPayload as isBaseCaptionPayload,
+  type CaptionPayload as BaseCaptionPayload,
 } from "@/types/captions";
+import type { SonioxLanguageCode } from "@/lib/languages";
+import type { ParticipantRole } from "@/lib/soniox-tokens";
+
+export type CaptionPayload = BaseCaptionPayload & {
+  role: ParticipantRole;
+};
+
+export function isCaptionPayload(value: unknown): value is CaptionPayload {
+  if (!isBaseCaptionPayload(value)) return false;
+
+  const caption = value as Record<string, unknown>;
+  return caption.role === "doctor" || caption.role === "patient";
+}
 
 type UseCaptionChannelOptions = {
   room: Room;
@@ -20,6 +33,8 @@ type UseCaptionChannelOptions = {
   stream?: MediaStream;
   participantIdentity: string;
   participantName: string;
+  role: ParticipantRole;
+  patientLanguage: SonioxLanguageCode;
 };
 
 const encoder = new TextEncoder();
@@ -32,6 +47,8 @@ export function useCaptionChannel({
   stream,
   participantIdentity,
   participantName,
+  role,
+  patientLanguage,
 }: UseCaptionChannelOptions) {
   const [finalCaptions, setFinalCaptions] = useState<CaptionPayload[]>([]);
   const [interimCaptions, setInterimCaptions] = useState<Record<string, CaptionPayload>>({});
@@ -63,6 +80,7 @@ export function useCaptionChannel({
       const caption: CaptionPayload = {
         participantIdentity,
         participantName,
+        role,
         ...chunk,
       };
 
@@ -77,12 +95,14 @@ export function useCaptionChannel({
           // The local caption remains visible if the room is reconnecting.
         });
     },
-    [applyCaption, participantIdentity, participantName, room],
+    [applyCaption, participantIdentity, participantName, role, room],
   );
 
   const soniox = useSonioxCaptions({
     enabled: enabled && microphoneEnabled,
     stream,
+    role,
+    patientLanguage,
     onCaption: publishCaption,
   });
 

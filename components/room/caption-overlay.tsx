@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { cn } from "@/lib/utils";
-import type { CaptionPayload } from "@/types/captions";
+import type { CaptionPayload } from "@/hooks/use-caption-channel";
 
 type CaptionOverlayProps = {
   enabled: boolean;

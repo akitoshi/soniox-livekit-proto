@@ -33,18 +33,24 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { useCaptionChannel } from "@/hooks/use-caption-channel";
+import type { SonioxLanguageCode } from "@/lib/languages";
+import type { ParticipantRole } from "@/lib/soniox-tokens";
 import { cn } from "@/lib/utils";
 
 type ConsultationRoomProps = {
   roomName: string;
   participantIdentity: string;
   participantName: string;
+  role: ParticipantRole;
+  patientLanguage: SonioxLanguageCode;
 };
 
 export function ConsultationRoom({
   roomName,
   participantIdentity,
   participantName,
+  role,
+  patientLanguage,
 }: ConsultationRoomProps) {
   const router = useRouter();
   const room = useRoomContext();
@@ -81,6 +87,8 @@ export function ConsultationRoom({
     stream: microphoneStream,
     participantIdentity,
     participantName,
+    role,
+    patientLanguage,
   });
 
   const isConnected = connectionState === ConnectionState.Connected;
