@@ -32,10 +32,14 @@ one_way×2 翻訳フェーズ(owt-1〜owt-9)完了 — PRD: docs/prds/one-way-tr
   - MEDIUM 流し込み: owt-0hi(M-1 transcript 行偽造 / M-2 無上限バッファ — **受容 or 対応は人間専管、判断待ち**)
   - LOW 流し込み: owt-h3z(L-1 identity 自己申告 / L-2 表示階層ロジック重複 / L-3 空白トークン脱落 — P3 任意タイミング)
 
-## 次にやること
+- wave 4 完了(2026-07-13): owt-8(commit d8f6d83、README のみ)→ merge・push 済み(main d8f6d83)。gh#8 close 済み
+  - 検証: tsc / lint / test(23 passed)/ build green。docs/design 全7リンク解決確認。README 記述は wave 3 実測事実と commander が突合済み。wave3/wave4 worktree は削除済み
 
-- wave 4: owt-8(README 更新)→ owt-9(受入 — UI 人間確認1点、契約)
-- 人間判断待ち: owt-0hi(ゲート1 MEDIUM 2件の受容/対応)。「対応」なら owt-h3z と束ねて修正 wave を編成すると効率的(同一ファイル群)
+## 次にやること(すべて人間専管)
+
+- **owt-9(受入)**: dev 実画面での UI 人間確認1点(契約)。手順は README の「2デバイス手動テスト」節が新フロー対応済み。pass なら commander が owt-9 close でフェーズ完了
+- **owt-0hi**: ゲート1 MEDIUM 2件(M-1 transcript 行偽造 / M-2 無上限バッファ)の受容 or 対応判断。「対応」なら owt-h3z(LOW 3件)と束ねて修正 wave を1本編成すると効率的(同一ファイル群)
+- フェーズ完了時: STATE.md の「運用上の学び」を ai-dev-kit 還元プロトコルで棚卸し(wave-dispatch スキル参照)
 
 ## 運用手順のメモ(次セッション向け)
 
