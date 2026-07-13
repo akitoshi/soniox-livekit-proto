@@ -18,9 +18,25 @@ one_way×2 翻訳フェーズ(owt-1〜owt-9)完了 — PRD: docs/prds/one-way-tr
   - 自動承認ライブラリ: vitest@4.1.10(週間DL 数百万・MIT・活発維持 — 契約基準内)
   - 学び: (1) 古い dev サーバ(前日起動)がポート3000を占有し smoke が偽404 — smoke 前にポート占有確認を必須化。(2) codex 起動時に hooks 信頼ダイアログが出る — worktree 委譲直後に「3(信頼せず続行)」の送信が必要。(3) codex への --prompt はシェル経由で quote> 表示になるが TUI 起動後に正しく届く
 
+- wave 2 完了(2026-07-13): owt-2(commit c50d74c)・owt-3(commit 499fce0)→ merge・push 済み。gh#3/#4 close 済み
+  - 検証: tsc / lint / test(10 passed)/ build green、dev smoke(ロール+言語UI描画、不正 role/lang フェイルセーフ確認)
+  - 言語定数60行は公式表と commander が突合済み(完全一致)。テーブルテストは EXPECTED 完全一致方式で Goodhart 対象
+
 ## 次にやること
 
-- wave 2: owt-2(言語定数)+ owt-3(ロビー拡張)を1つの /goal に束ねて委譲(同一 UI 系統・順次依存)
+- **wave 3: owt-4 → owt-5 → owt-6 を1つの worktree・1つの /goal に束ねて委譲(3コミットに分割)**
+  - 束ねる理由: owt-5 と owt-6 が components/room/caption-history.tsx と hooks/use-caption-channel.ts を共に触るため、並列 worktree は衝突する
+  - owt-4 の要点: use-soniox-captions.ts の two_way(ja/en ハードコード)→ one_way 化(医師: target=患者言語、患者: target="ja")。language_hints=["ja","en",患者言語] 重複除去。SDK の型定義に従う(translation 内は snake_case)。CaptionPayload に role 追加+isCaptionPayload 更新。RoomClient の data-participant-role / data-patient-language 属性 → props 配線に置換。トークン処理の純関数を lib/soniox-tokens.ts に抽出してテスト
+  - owt-5 の要点: 相手の発話=翻訳メイン+原文小、自分=原文メイン(overlay/history とも)。local identity の受け渡しが必要。翻訳なし(患者言語=ja 等)でも破綻しない
+  - owt-6 の要点: コピー用バッファは表示用300件制限と独立(uncapped)。lib/transcript-format.ts は viewer 言語相対整形(viewer の言語の文をメインに、他方を括弧書き: [患者 de→ja] 訳文 (原文: ...) / [医師 ja] 原文)+テスト。字幕履歴シートに全文コピーボタン(navigator.clipboard)
+  - **wave 3 完了後 = ゲート1(🔒)**: security-gate を履歴なし新セッションで実施(観点は plan 参照)。CRITICAL-0 まで wave 4 に進まない
+- wave 4: owt-8(README 更新)→ owt-9(受入 — UI 人間確認1点、契約)
+
+## 運用手順のメモ(次セッション向け)
+
+- 委譲: `orca worktree create --repo id:83d1e568-175d-4df6-937d-26421be8a652 --name <名前> --no-parent --agent codex --prompt "$(cat <goal file>)"` → codex 起動直後に hooks 信頼ダイアログが出るので `orca terminal send --text "3"` → enter で「信頼せず続行」を選ぶ
+- 完了検知: tui-idle は codex スピナーで早発する。terminal read で「Worked for」or「Goal achieved」を2回連続確認する方式が確実
+- /goal テンプレは docs/goal-prompt.md。ミラー起票: gh issue create --label inner-loop → bd note に gh#N
 
 ## 詰まっている点
 
