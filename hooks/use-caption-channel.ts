@@ -51,11 +51,13 @@ export function useCaptionChannel({
   patientLanguage,
 }: UseCaptionChannelOptions) {
   const [finalCaptions, setFinalCaptions] = useState<CaptionPayload[]>([]);
+  const [transcriptCaptions, setTranscriptCaptions] = useState<CaptionPayload[]>([]);
   const [interimCaptions, setInterimCaptions] = useState<Record<string, CaptionPayload>>({});
 
   const applyCaption = useCallback((caption: CaptionPayload) => {
     if (caption.isFinal) {
       setFinalCaptions((current) => [...current, caption].slice(-300));
+      setTranscriptCaptions((current) => [...current, caption]);
       setInterimCaptions((current) => {
         const next = { ...current };
         delete next[caption.participantIdentity];
@@ -132,6 +134,7 @@ export function useCaptionChannel({
 
   return {
     finalCaptions,
+    transcriptCaptions,
     interimCaptions: interimList,
     sonioxStatus: soniox.status,
     sonioxError: soniox.error,

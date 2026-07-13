@@ -1,8 +1,10 @@
 "use client";
 
-import { ChatText, Translate, Waveform } from "@phosphor-icons/react";
+import { useState } from "react";
+import { Check, ChatText, Copy, Translate, Waveform } from "@phosphor-icons/react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   SheetContent,
@@ -11,11 +13,15 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import type { CaptionPayload } from "@/hooks/use-caption-channel";
+import type { SonioxLanguageCode } from "@/lib/languages";
+import { formatTranscript } from "@/lib/transcript-format";
 
 type CaptionHistoryProps = {
   finalCaptions: CaptionPayload[];
+  transcriptCaptions: CaptionPayload[];
   interimCaptions: CaptionPayload[];
   localParticipantIdentity: string;
+  viewerLanguage: SonioxLanguageCode;
 };
 
 function getCaptionPresentation(caption: CaptionPayload, isLocal: boolean) {
@@ -76,9 +82,26 @@ function formatTime(timestamp: number) {
 
 export function CaptionHistory({
   finalCaptions,
+  transcriptCaptions,
   interimCaptions,
   localParticipantIdentity,
+  viewerLanguage,
 }: CaptionHistoryProps) {
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
+  const hasTranscript = transcriptCaptions.length > 0;
+
+  async function copyTranscript() {
+    const transcript = formatTranscript(transcriptCaptions, viewerLanguage);
+    if (!transcript) return;
+
+    try {
+      await navigator.clipboard.writeText(transcript);
+      setCopyStatus("copied");
+    } catch {
+      setCopyStatus("error");
+    }
+  }
+
   return (
     <SheetContent>
       <SheetHeader>
@@ -89,6 +112,26 @@ export function CaptionHistory({
         <SheetDescription>
           この履歴はブラウザのメモリ内だけに保持され、ページを閉じると消去されます。
         </SheetDescription>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-2 w-fit border-slate-300/70 text-slate-700 hover:bg-teal-50 hover:text-teal-800"
+          onClick={copyTranscript}
+          disabled={!hasTranscript}
+          aria-label="確定済み会話ログ全文をコピー"
+        >
+          {copyStatus === "copied" ? (
+            <Check size={16} weight="bold" />
+          ) : (
+            <Copy size={16} weight="bold" />
+          )}
+          {copyStatus === "copied"
+            ? "コピーしました"
+            : copyStatus === "error"
+              ? "コピーできませんでした"
+              : "全文をコピー"}
+        </Button>
       </SheetHeader>
 
       <ScrollArea className="min-h-0 flex-1 px-6 pb-6">

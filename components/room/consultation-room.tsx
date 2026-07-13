@@ -77,6 +77,7 @@ export function ConsultationRoom({
 
   const {
     finalCaptions,
+    transcriptCaptions,
     interimCaptions,
     sonioxStatus,
     sonioxError,
@@ -287,8 +288,10 @@ export function ConsultationRoom({
 
       <CaptionHistory
         finalCaptions={finalCaptions}
+        transcriptCaptions={transcriptCaptions}
         interimCaptions={interimCaptions}
         localParticipantIdentity={participantIdentity}
+        viewerLanguage={role === "doctor" ? "ja" : patientLanguage}
       />
     </Sheet>
   );
