@@ -28,10 +28,14 @@ one_way×2 翻訳フェーズ(owt-1〜owt-9)完了 — PRD: docs/prds/one-way-tr
   - 残確認(owt-9 の人間 UI 確認1点に委ねる): 患者が非日本語で話す→医師側で ja 翻訳メイン表示になるケース
   - 自動承認ライブラリ: なし(依存追加なし、lockfile 無変更)
 
+- ゲート1 通過(2026-07-13): 対象 bd580a3..28802a0。**CRITICAL 0 / HIGH 0 / MEDIUM 2 / LOW 3 → PASS**(Fable 履歴なし headless、tsc/lint/test 独立再実行 green、Goodhart 弱体化ゼロ確認)
+  - MEDIUM 流し込み: owt-0hi(M-1 transcript 行偽造 / M-2 無上限バッファ — **受容 or 対応は人間専管、判断待ち**)
+  - LOW 流し込み: owt-h3z(L-1 identity 自己申告 / L-2 表示階層ロジック重複 / L-3 空白トークン脱落 — P3 任意タイミング)
+
 ## 次にやること
 
-- **ゲート1(🔒)実施中/未完なら最優先**: security-gate を履歴なし新セッションで実施(観点は plan 参照)。CRITICAL-0 まで wave 4 に進まない
 - wave 4: owt-8(README 更新)→ owt-9(受入 — UI 人間確認1点、契約)
+- 人間判断待ち: owt-0hi(ゲート1 MEDIUM 2件の受容/対応)。「対応」なら owt-h3z と束ねて修正 wave を編成すると効率的(同一ファイル群)
 
 ## 運用手順のメモ(次セッション向け)
 
