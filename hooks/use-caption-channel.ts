@@ -19,11 +19,18 @@ export type CaptionPayload = BaseCaptionPayload & {
   role: ParticipantRole;
 };
 
+export const MAX_CAPTION_TEXT_LENGTH = 8192;
+
 export function isCaptionPayload(value: unknown): value is CaptionPayload {
   if (!isBaseCaptionPayload(value)) return false;
 
   const caption = value as Record<string, unknown>;
-  return caption.role === "doctor" || caption.role === "patient";
+  return (
+    (caption.role === "doctor" || caption.role === "patient") &&
+    value.text.length <= MAX_CAPTION_TEXT_LENGTH &&
+    (value.translation === null ||
+      value.translation.length <= MAX_CAPTION_TEXT_LENGTH)
+  );
 }
 
 type UseCaptionChannelOptions = {

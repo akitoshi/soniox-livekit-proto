@@ -1,7 +1,10 @@
 import type { Token } from "@soniox/speech-to-text-web";
 import { describe, expect, it } from "vitest";
 
-import { isCaptionPayload } from "@/hooks/use-caption-channel";
+import {
+  isCaptionPayload,
+  MAX_CAPTION_TEXT_LENGTH,
+} from "@/hooks/use-caption-channel";
 import {
   getSonioxLanguageHints,
   getSonioxTranslationTarget,
@@ -119,6 +122,38 @@ describe("isCaptionPayload", () => {
 
   it("accepts a complete caption payload", () => {
     expect(isCaptionPayload(validCaption)).toBe(true);
+  });
+
+  it("accepts text and translations at the length limit", () => {
+    expect(
+      isCaptionPayload({
+        ...validCaption,
+        text: "a".repeat(MAX_CAPTION_TEXT_LENGTH),
+        translation: "あ".repeat(MAX_CAPTION_TEXT_LENGTH),
+      }),
+    ).toBe(true);
+    expect(
+      isCaptionPayload({
+        ...validCaption,
+        text: "a".repeat(MAX_CAPTION_TEXT_LENGTH),
+        translation: null,
+      }),
+    ).toBe(true);
+  });
+
+  it("rejects text and translations over the length limit", () => {
+    expect(
+      isCaptionPayload({
+        ...validCaption,
+        text: "a".repeat(MAX_CAPTION_TEXT_LENGTH + 1),
+      }),
+    ).toBe(false);
+    expect(
+      isCaptionPayload({
+        ...validCaption,
+        translation: "あ".repeat(MAX_CAPTION_TEXT_LENGTH + 1),
+      }),
+    ).toBe(false);
   });
 
   it("rejects missing and invalid roles without weakening existing validation", () => {

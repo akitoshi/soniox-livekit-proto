@@ -14,12 +14,25 @@ const ROLE_LABELS: Record<ParticipantRole, string> = {
   patient: "患者",
 };
 
+const TRANSCRIPT_LINE_BREAK_PATTERN = /[\r\n\u2028\u2029]+/gu;
+const BIDI_CONTROL_PATTERN = /[\u202a-\u202e\u2066-\u2069]/gu;
+
+function sanitizeTranscriptText(text: string) {
+  return text
+    .replace(TRANSCRIPT_LINE_BREAK_PATTERN, " ")
+    .replace(BIDI_CONTROL_PATTERN, "")
+    .replace(/ {2,}/g, " ")
+    .trim();
+}
+
 export function formatTranscriptEntry(
   entry: TranscriptEntry,
   viewerLanguage: SonioxLanguageCode,
 ) {
-  const original = entry.text.trim();
-  const translation = entry.translation?.trim() || null;
+  const original = sanitizeTranscriptText(entry.text);
+  const translation = entry.translation
+    ? sanitizeTranscriptText(entry.translation) || null
+    : null;
   if (!original && !translation) return null;
 
   const translationIsMain = Boolean(

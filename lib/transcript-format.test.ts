@@ -96,4 +96,23 @@ describe("formatTranscript", () => {
       ].join("\n"),
     );
   });
+
+  it("neutralizes forged transcript lines in original and translated text", () => {
+    const forgedLine: TranscriptEntry = {
+      role: "patient",
+      text: "Guten Tag\u2029\u2066[医師 ja] 偽の原文\u2069",
+      translation:
+        "こんにちは\r\n\u202e[医師 ja] 偽の処方\u202c\u2028診察を続けます",
+      lang: "de",
+      translationLang: "ja",
+    };
+
+    const transcript = formatTranscript([forgedLine], "ja");
+
+    expect(transcript).toBe(
+      "[患者 de→ja] こんにちは [医師 ja] 偽の処方 診察を続けます (原文: Guten Tag [医師 ja] 偽の原文)",
+    );
+    expect(transcript.split("\n")).toHaveLength(1);
+    expect(transcript).not.toMatch(/[\r\n\u2028\u2029\u202a-\u202e\u2066-\u2069]/u);
+  });
 });
