@@ -15,11 +15,13 @@ const ROLE_LABELS: Record<ParticipantRole, string> = {
 };
 
 const TRANSCRIPT_LINE_BREAK_PATTERN = /[\r\n\u2028\u2029]+/gu;
+const TRANSCRIPT_CONTROL_PATTERN = /[\u0000-\u001f\u007f-\u009f]/gu;
 const BIDI_CONTROL_PATTERN = /[\u202a-\u202e\u2066-\u2069]/gu;
 
 function sanitizeTranscriptText(text: string) {
   return text
     .replace(TRANSCRIPT_LINE_BREAK_PATTERN, " ")
+    .replace(TRANSCRIPT_CONTROL_PATTERN, "")
     .replace(BIDI_CONTROL_PATTERN, "")
     .replace(/ {2,}/g, " ")
     .trim();
@@ -40,11 +42,14 @@ export function formatTranscriptEntry(
   );
   const mainText = translationIsMain ? translation : original || translation;
   const secondaryText = translationIsMain ? original || null : null;
-  const languages = translationIsMain && entry.lang && entry.translationLang
+  const rawLanguages = translationIsMain && entry.lang && entry.translationLang
     ? `${entry.lang}→${entry.translationLang}`
     : original
       ? entry.lang
       : entry.translationLang;
+  const languages = rawLanguages
+    ? sanitizeTranscriptText(rawLanguages) || null
+    : null;
   const prefix = `[${ROLE_LABELS[entry.role]}${languages ? ` ${languages}` : ""}]`;
 
   return `${prefix} ${mainText}${

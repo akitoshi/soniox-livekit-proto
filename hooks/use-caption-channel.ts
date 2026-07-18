@@ -12,11 +12,22 @@ import {
   isCaptionPayload as isBaseCaptionPayload,
   type CaptionPayload as BaseCaptionPayload,
 } from "@/types/captions";
-import type { SonioxLanguageCode } from "@/lib/languages";
+import {
+  isSonioxLanguageCode,
+  type SonioxLanguageCode,
+} from "@/lib/languages";
 import type { ParticipantRole } from "@/lib/soniox-tokens";
 
 export type CaptionPayload = BaseCaptionPayload & {
   role: ParticipantRole;
+};
+
+type NormalizedCaptionPayload = Omit<
+  CaptionPayload,
+  "lang" | "translationLang"
+> & {
+  lang: SonioxLanguageCode | null;
+  translationLang: SonioxLanguageCode | null;
 };
 
 export const MAX_CAPTION_TEXT_LENGTH = 8192;
@@ -31,6 +42,23 @@ export function isCaptionPayload(value: unknown): value is CaptionPayload {
     (value.translation === null ||
       value.translation.length <= MAX_CAPTION_TEXT_LENGTH)
   );
+}
+
+export function normalizeCaptionPayload(
+  caption: CaptionPayload,
+): NormalizedCaptionPayload {
+  return {
+    ...caption,
+    lang:
+      caption.lang !== null && isSonioxLanguageCode(caption.lang)
+        ? caption.lang
+        : null,
+    translationLang:
+      caption.translationLang !== null &&
+      isSonioxLanguageCode(caption.translationLang)
+        ? caption.translationLang
+        : null,
+  };
 }
 
 type UseCaptionChannelOptions = {
@@ -57,11 +85,13 @@ export function useCaptionChannel({
   role,
   patientLanguage,
 }: UseCaptionChannelOptions) {
-  const [finalCaptions, setFinalCaptions] = useState<CaptionPayload[]>([]);
-  const [transcriptCaptions, setTranscriptCaptions] = useState<CaptionPayload[]>([]);
-  const [interimCaptions, setInterimCaptions] = useState<Record<string, CaptionPayload>>({});
+  const [finalCaptions, setFinalCaptions] = useState<NormalizedCaptionPayload[]>([]);
+  const [transcriptCaptions, setTranscriptCaptions] = useState<NormalizedCaptionPayload[]>([]);
+  const [interimCaptions, setInterimCaptions] = useState<
+    Record<string, NormalizedCaptionPayload>
+  >({});
 
-  const applyCaption = useCallback((caption: CaptionPayload) => {
+  const applyCaption = useCallback((caption: NormalizedCaptionPayload) => {
     if (caption.isFinal) {
       setFinalCaptions((current) => [...current, caption].slice(-300));
       setTranscriptCaptions((current) => [...current, caption]);
@@ -84,16 +114,23 @@ export function useCaptionChannel({
     });
   }, []);
 
+  const normalizeAndApplyCaption = useCallback(
+    (caption: CaptionPayload) => {
+      const normalizedCaption = normalizeCaptionPayload(caption);
+      applyCaption(normalizedCaption);
+      return normalizedCaption;
+    },
+    [applyCaption],
+  );
+
   const publishCaption = useCallback(
     (chunk: SonioxCaptionChunk) => {
-      const caption: CaptionPayload = {
+      const caption = normalizeAndApplyCaption({
         participantIdentity,
         participantName,
         role,
         ...chunk,
-      };
-
-      applyCaption(caption);
+      });
 
       void room.localParticipant
         .publishData(encoder.encode(JSON.stringify(caption)), {
@@ -104,7 +141,7 @@ export function useCaptionChannel({
           // The local caption remains visible if the room is reconnecting.
         });
     },
-    [applyCaption, participantIdentity, participantName, role, room],
+    [normalizeAndApplyCaption, participantIdentity, participantName, role, room],
   );
 
   const soniox = useSonioxCaptions({
@@ -122,7 +159,7 @@ export function useCaptionChannel({
       try {
         const parsed: unknown = JSON.parse(decoder.decode(payload));
         if (!isCaptionPayload(parsed) || parsed.participantIdentity === participantIdentity) return;
-        applyCaption(parsed);
+        normalizeAndApplyCaption(parsed);
       } catch {
         // Ignore malformed data packets from other clients.
       }
@@ -132,7 +169,7 @@ export function useCaptionChannel({
     return () => {
       room.off(RoomEvent.DataReceived, handleData);
     };
-  }, [applyCaption, participantIdentity, room]);
+  }, [normalizeAndApplyCaption, participantIdentity, room]);
 
   const interimList = useMemo(
     () => Object.values(interimCaptions).sort((a, b) => a.timestamp - b.timestamp),

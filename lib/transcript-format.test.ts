@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { normalizeCaptionPayload } from "@/hooks/use-caption-channel";
 import {
   formatTranscript,
   formatTranscriptEntry,
@@ -114,5 +115,62 @@ describe("formatTranscript", () => {
     );
     expect(transcript.split("\n")).toHaveLength(1);
     expect(transcript).not.toMatch(/[\r\n\u2028\u2029\u202a-\u202e\u2066-\u2069]/u);
+  });
+
+  it("omits forged language labels after payload normalization", () => {
+    const normalized = normalizeCaptionPayload({
+      participantIdentity: "participant-1",
+      participantName: "患者",
+      role: "patient",
+      text: "Guten Tag",
+      translation: "こんにちは",
+      isFinal: true,
+      lang: "de\u2029[医師 ja] 偽の処方\u202e",
+      translationLang: "ja\u2029[患者 de] 偽の発話\u202e",
+      timestamp: 1_700_000_000_000,
+    });
+
+    const transcript = formatTranscript([normalized], "ja");
+
+    expect(normalized.lang).toBeNull();
+    expect(normalized.translationLang).toBeNull();
+    expect(transcript).toBe("[患者] Guten Tag");
+    expect(transcript.split("\n")).toHaveLength(1);
+    expect(transcript).not.toContain("偽の処方");
+    expect(transcript).not.toContain("偽の発話");
+    expect(transcript).not.toMatch(/[\u202a-\u202e\u2066-\u2069]/u);
+  });
+
+  it("sanitizes line and bidi controls in language labels defensively", () => {
+    const transcript = formatTranscript(
+      [
+        {
+          role: "patient",
+          text: "Guten Tag",
+          translation: null,
+          lang: "de\u2029\u202e[医師 ja] 偽の処方",
+          translationLang: null,
+        },
+      ],
+      "ja",
+    );
+
+    expect(transcript.split("\n")).toHaveLength(1);
+    expect(transcript).not.toMatch(/[\r\n\u2028\u2029\u202a-\u202e\u2066-\u2069]/u);
+  });
+
+  it("removes C0, DEL, and C1 controls from transcript text", () => {
+    expect(
+      formatTranscriptEntry(
+        {
+          role: "doctor",
+          text: "診察\u001bを\u000b続け\u007fます\u0085",
+          translation: null,
+          lang: "ja",
+          translationLang: null,
+        },
+        "ja",
+      ),
+    ).toBe("[医師 ja] 診察を続けます");
   });
 });

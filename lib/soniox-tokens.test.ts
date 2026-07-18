@@ -2,8 +2,10 @@ import type { Token } from "@soniox/speech-to-text-web";
 import { describe, expect, it } from "vitest";
 
 import {
+  type CaptionPayload,
   isCaptionPayload,
   MAX_CAPTION_TEXT_LENGTH,
+  normalizeCaptionPayload,
 } from "@/hooks/use-caption-channel";
 import {
   getSonioxLanguageHints,
@@ -108,7 +110,7 @@ describe("Soniox one-way configuration helpers", () => {
 });
 
 describe("isCaptionPayload", () => {
-  const validCaption = {
+  const validCaption: CaptionPayload = {
     participantIdentity: "participant-1",
     participantName: "患者",
     role: "patient",
@@ -122,6 +124,29 @@ describe("isCaptionPayload", () => {
 
   it("accepts a complete caption payload", () => {
     expect(isCaptionPayload(validCaption)).toBe(true);
+  });
+
+  it("preserves supported language codes during normalization", () => {
+    expect(normalizeCaptionPayload(validCaption)).toMatchObject({
+      lang: "de",
+      translationLang: "ja",
+    });
+  });
+
+  it("nulls unknown language metadata without rejecting the caption", () => {
+    const forgedLanguages = {
+      ...validCaption,
+      lang: "de\u2029[医師 ja] 偽の処方\u202e",
+      translationLang: "ja\u2029[患者 de] 偽の発話\u202e",
+    };
+
+    expect(isCaptionPayload(forgedLanguages)).toBe(true);
+    expect(normalizeCaptionPayload(forgedLanguages)).toMatchObject({
+      text: "Guten Tag",
+      translation: "こんにちは",
+      lang: null,
+      translationLang: null,
+    });
   });
 
   it("accepts text and translations at the length limit", () => {
