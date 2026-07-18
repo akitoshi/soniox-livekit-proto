@@ -114,6 +114,8 @@ with check (
 
 Soniox の `<end>` 検出、または 2〜5 秒のデバウンスで発話を確定し、確定セグメントごとに upsert する。`seq` は speaker ごとに医師クライアントが単調増加で採番する。同じセグメントの再試行では同じ `(session_id, speaker, seq)` を必ず再利用し、unique 制約と upsert で瞬断後の重複を吸収する。セッション終了時だけの一括保存は禁止する。
 
+`original_text` と `translated_text` は保存前のサニタイズを必須とする。改行類(`\r`、`\n`、U+2028、U+2029)は半角スペースへ置換し、bidi 制御文字(U+202A〜U+202E、U+2066〜U+2069)は除去して、後続のコピーやエクスポートで偽の発話行を生成できない形に正規化してから upsert する。
+
 ## 終了時フラッシュ
 
 通常送信とは別に、`pagehide` で未送信バッファを `navigator.sendBeacon` に渡す。`sendBeacon` は任意の `Authorization` や `apikey` ヘッダーを設定できないため、Supabase REST へ直接送らない。同一オリジンの自前 Next.js API Route に送信し、Route 側で Clerk セッションを検証して、その Clerk token を付けた Supabase client から RLS 適用下で upsert する。

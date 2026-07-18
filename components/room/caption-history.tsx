@@ -13,6 +13,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import type { CaptionPayload } from "@/hooks/use-caption-channel";
+import { getCaptionPresentation } from "@/lib/caption-presentation";
 import type { SonioxLanguageCode } from "@/lib/languages";
 import { formatTranscript } from "@/lib/transcript-format";
 
@@ -23,26 +24,6 @@ type CaptionHistoryProps = {
   localParticipantIdentity: string;
   viewerLanguage: SonioxLanguageCode;
 };
-
-function getCaptionPresentation(caption: CaptionPayload, isLocal: boolean) {
-  const showTranslationAsMain = !isLocal && Boolean(caption.translation);
-  const mainText = showTranslationAsMain
-    ? caption.translation ?? caption.text
-    : caption.text || caption.translation || "";
-  const secondaryText = showTranslationAsMain
-    ? caption.text || null
-    : caption.text && caption.translation
-      ? caption.translation
-      : null;
-
-  return {
-    mainText,
-    mainLanguage: showTranslationAsMain ? caption.translationLang : caption.lang,
-    secondaryText,
-    secondaryLanguage: showTranslationAsMain ? caption.lang : caption.translationLang,
-    secondaryLabel: showTranslationAsMain ? "原文" : "翻訳",
-  };
-}
 
 function CaptionText({
   caption,
