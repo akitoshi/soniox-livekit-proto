@@ -40,10 +40,16 @@ one_way×2 翻訳フェーズ(owt-1〜owt-9)完了 — PRD: docs/prds/one-way-tr
   - 検証: tsc / lint / test(5 files, 29 passed)/ build green。room 実打で字幕・コピー回帰なし(コピー全行ラベル形式を実測)。基底ガード・言語定数無変更
 - 限定再ゲート(2026-07-18): 対象 19cc7ef..3f929db。**FAIL(CRITICAL 0 / HIGH 0)** — M-2 解消・M-1 部分解消。新指摘 M-3: lang/translationLang が無サニタイズでコピーラベルに到達し M-1 と同一の偽行注入が残存(lib/transcript-format.ts:43-48)。再ゲート L-1(C0/C1 制御未除去)は wave 6 に同梱、L-2(transcriptCaptions 件数無上限)は LOW・demo 脅威モデル内で受容記録
 
+- wave 6 完了(2026-07-19): owt-2tc(commit 7ca06aa: isSonioxLanguageCode 許可リスト正規化+ラベル多重サニタイズ+C0/C1 除去)→ rebase・merge・push 済み(main 7ca06aa)。gh#11 close 済み
+  - 検証: tsc / lint / test(34 passed)/ build green。room 実打でコピー18行=全行ラベル形式・制御文字ゼロ・正当言語コード通過を実測
+  - 学び: (1) run_in_background の dev サーバはハーネスのタスク終了に巻き込まれて exit 0 で落ちることがある — nohup+リダイレクトで完全デタッチが安定。(2) 長時間 room を開き続けると Soniox 一時キーのセッション時間上限エラーが UI に出る(仕様どおり・秘匿情報漏れなし)。タブはリロードで復旧
+- 再々ゲート PASS(2026-07-19): 対象 3f929db..7ca06aa。**CRITICAL 0 / HIGH 0 / MEDIUM 0 / LOW 4 → M-3 解消**(state 3種を NormalizedCaptionPayload 型化し未正規化ペイロードを型で遮断、迂回経路なしを静的トレースで確認)
+  - LOW 流し込み: owt-hcw(TAB 単語結合 / スプレッド宣言外フィールド / participantName 無サニタイズ — P3 任意)。LOW-4(identity 突合)は wave 5 の docs/design 反映で対応済み
+
 ## 次にやること
 
-- **wave 6 進行中**: owt-2tc(M-3 修正: isSonioxLanguageCode 許可リスト正規化+ラベルサニタイズ+C0/C1 除去)を worktree `wave6-m3-fix` で codex に委譲済み。完了後: commander 再検証 → merge → push → **再々ゲート**(M-3 解消確認)
-- **owt-9(受入、人間専管)**: owt-2tc に dep でブロック中。再々ゲート PASS 後に dev 実画面での UI 人間確認1点(README の2デバイス手動テスト節、重点=患者が外国語で話す→医師側 ja 翻訳メイン)。pass なら commander が close でフェーズ完了
+- **owt-9(受入、人間専管)— フェーズ最後のタスク**: dev 実画面での UI 人間確認1点(契約)。README の2デバイス手動テスト節が手順。自動検証で唯一未カバーなのは「患者が外国語(例: de)で話す→医師側で ja 翻訳がメイン表示」。pass 連絡で commander が close しフェーズ完了
+- owt-hcw(P3・任意): 再々ゲート LOW 3件。次フェーズか手すきで
 - フェーズ完了時: STATE.md の「運用上の学び」を ai-dev-kit 還元プロトコルで棚卸し(wave-dispatch スキル参照)
 
 ## 運用手順のメモ(次セッション向け)
