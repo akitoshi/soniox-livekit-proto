@@ -178,7 +178,7 @@ export function ConsultationRoom({
           </div>
         </header>
 
-        <main className="relative min-h-0 flex-1 md:p-4">
+        <main className="relative flex min-h-0 flex-1 flex-col md:p-4">
           <PipVideo
             key={remoteParticipant?.identity ?? "waiting"}
             tracks={tracks}

@@ -59,7 +59,10 @@ export function PipVideo({
   );
 
   return (
-    <section className="consultation-stage" aria-label="通話映像">
+    <section
+      className="consultation-stage relative min-h-0 flex-1"
+      aria-label="通話映像"
+    >
       <VideoSurface
         participant={mainParticipant}
         track={mainTrack}
@@ -127,7 +130,7 @@ function VideoSurface({
           disableSpeakingIndicator
         />
       ) : (
-        <div className="flex h-full items-center justify-center bg-slate-900">
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
           <div className="flex flex-col items-center gap-2 px-4 text-center text-slate-400">
             <VideoCameraSlash size={26} weight="bold" />
             <span className="text-xs font-semibold">

@@ -113,7 +113,8 @@ input {
 }
 
 .consultation-room {
-  --consultation-pip-width: clamp(7rem, 28vw, 13rem);
+  --consultation-pip-width: 9rem;
+  --consultation-pip-height: 5.0625rem;
   --consultation-controls-clearance: calc(4.75rem + env(safe-area-inset-bottom));
 }
 
@@ -126,13 +127,21 @@ input {
 
 .consultation-stage {
   position: relative;
-  height: 100%;
+  flex: 1 1 0%;
+  width: 100%;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
   background: oklch(0.16 0.016 190);
 }
 
-.consultation-main-video,
+.consultation-main-video {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: oklch(0.19 0.016 190);
+}
+
 .consultation-pip-video {
   position: relative;
   height: 100%;
@@ -215,8 +224,11 @@ input {
   right: max(0.75rem, env(safe-area-inset-right));
   bottom: var(--consultation-controls-clearance);
   z-index: 15;
-  width: var(--consultation-pip-width);
-  aspect-ratio: 4 / 3;
+  width: min(
+    var(--consultation-pip-width),
+    calc(100% - 1.5rem - env(safe-area-inset-left) - env(safe-area-inset-right))
+  );
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   border: 1px solid oklch(0.82 0.025 190 / 0.38);
   border-radius: 0.9rem;
@@ -251,7 +263,7 @@ input {
 .consultation-caption-safe {
   right: max(0.75rem, env(safe-area-inset-right));
   bottom: calc(
-    var(--consultation-controls-clearance) + (var(--consultation-pip-width) * 0.75) + 0.75rem
+    var(--consultation-controls-clearance) + var(--consultation-pip-height) + 0.75rem
   );
   left: max(0.75rem, env(safe-area-inset-left));
 }
