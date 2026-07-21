@@ -70,6 +70,8 @@
   - 検証: tsc / lint / test(7 files, 51 passed)/ build green。実打で医師=コピーあり/患者=なし+S/M/L 切替(履歴シート内)を確認。README はブスコパン fixture 手順・consult.settings 節を含み現物突合済み
   - tailnet 実機サーバ(3001)はフェーズ2全機能入りの最新ビルド(1816f9c)で稼働中
 
+- 受入NG #1 修正済み(2026-07-21): owt-zxe 設定ポップオーバーが映像裏に隠れる → header に relative isolate z-50(commit 2c14b16、実打で elementFromPoint 検証)。merge・push・実機サーバ更新済み
+
 ## 次にやること(人間待ちのみ)
 
 - **ux-8(owt-7wc)統合受入 — 人間の実機確認**: https://mnp.minmi-opah.ts.net:8443(iPhone、Tailscale ON)+ PC http://localhost:3001。確認項目: PiP レイアウト/入替/カメラ切替/ミュート・話者表示/通話中の言語変更(医師の歯車→患者に通知)/字幕階層(相手=翻訳メイン)/S/M/L/医師のみコピー/**ブスコパン発話 fixture**(README の手動テスト手順 15 が正)。pass で owt-7wc+owt-9 を close しフェーズ2完了
