@@ -5,7 +5,8 @@
 
 ## 現在の目標
 
-one_way×2 翻訳フェーズ(owt-1〜owt-9)完了 — PRD: docs/prds/one-way-translation.md
+フェーズ2: 診療 UX 改善(ux-1〜ux-8 = owt-0gs/ntb/tot/4ki/fuy/rcb/5zt/7wc)— PRD: docs/prds/consultation-ux.md、DAG: docs/specs/consultation-ux-plan.md
+フェーズ1(one_way×2、owt-1〜8)は実装完了。owt-9 受入は 2026-07-21 実機フィードバックで保留(機能 pass・UX/医療語彙で改善要求)→ ux-8 に統合再受入
 
 ## 完了したこと
 
@@ -46,11 +47,16 @@ one_way×2 翻訳フェーズ(owt-1〜owt-9)完了 — PRD: docs/prds/one-way-tr
 - 再々ゲート PASS(2026-07-19): 対象 3f929db..7ca06aa。**CRITICAL 0 / HIGH 0 / MEDIUM 0 / LOW 4 → M-3 解消**(state 3種を NormalizedCaptionPayload 型化し未正規化ペイロードを型で遮断、迂回経路なしを静的トレースで確認)
   - LOW 流し込み: owt-hcw(TAB 単語結合 / スプレッド宣言外フィールド / participantName 無サニタイズ — P3 任意)。LOW-4(identity 突合)は wave 5 の docs/design 反映で対応済み
 
+- フェーズ2開始(2026-07-21): 実機フィードバック(Zoom 比の UX 差・ブスコパン等の医療語彙誤認識)→ PRD/plan 起草・bd DAG 起票(commit b4e4dec)。P2 候補は全採用+医療語彙+字幕UI改善(人間承認済み)
+  - Tailscale serve で実機確認環境構築済み: https://mnp.minmi-opah.ts.net:8443 → localhost:3001(本番ビルド、nohup デタッチ稼働中。PID: scratchpad/owt9-server.pid)。iPhone(iphone-15)は tailnet 登録済み
+
 ## 次にやること
 
-- **owt-9(受入、人間専管)— フェーズ最後のタスク**: dev 実画面での UI 人間確認1点(契約)。README の2デバイス手動テスト節が手順。自動検証で唯一未カバーなのは「患者が外国語(例: de)で話す→医師側で ja 翻訳がメイン表示」。pass 連絡で commander が close しフェーズ完了
-- owt-hcw(P3・任意): 再々ゲート LOW 3件。次フェーズか手すきで
-- フェーズ完了時: STATE.md の「運用上の学び」を ai-dev-kit 還元プロトコルで棚卸し(wave-dispatch スキル参照)
+- **wave 7 進行中**: ux-1/2/3(owt-0gs PiP・owt-ntb ミュート/話者/再接続・owt-tot カメラ切替)を worktree `wave7-ux-visual` で codex に委譲済み(gh#12/13/14)。完了後: commander 再検証 → merge → push
+- wave 8: ux-4(owt-4ki attributes 基盤+通話中言語変更 🔒)+ ux-5(owt-fuy 医療語彙)束ね → **ゲート2**(attributes という新外部入力面)
+- wave 9: ux-6(owt-rcb コピー医師限定+字幕UI)+ ux-7(owt-5zt docs)→ ux-8(owt-7wc 統合受入 — 人間、owt-9 併合)
+- owt-hcw(P3・任意): 再々ゲート LOW 3件。手すきの wave に同乗可
+- フェーズ完了時: 学びを ai-dev-kit 還元プロトコルで棚卸し
 
 ## 運用手順のメモ(次セッション向け)
 
