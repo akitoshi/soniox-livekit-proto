@@ -111,6 +111,7 @@ export function ConsultationRoom({
     participantName,
     role,
     patientLanguage,
+    extraTerms: sessionSettings.extraTerms,
   });
 
   const isConnected = connectionState === ConnectionState.Connected;
@@ -180,11 +181,15 @@ export function ConsultationRoom({
             {role === "doctor" ? (
               <SessionSettingsPopover
                 patientLanguage={patientLanguage}
+                extraTerms={sessionSettings.extraTerms}
                 onPatientLanguageChange={(nextLanguage) =>
                   onSessionSettingsChange({
                     ...sessionSettings,
                     patientLanguage: nextLanguage,
                   })
+                }
+                onExtraTermsChange={(extraTerms) =>
+                  onSessionSettingsChange({ ...sessionSettings, extraTerms })
                 }
               />
             ) : null}

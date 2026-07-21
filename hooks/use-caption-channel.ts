@@ -70,6 +70,7 @@ type UseCaptionChannelOptions = {
   participantName: string;
   role: ParticipantRole;
   patientLanguage: SonioxLanguageCode;
+  extraTerms: readonly string[];
 };
 
 const encoder = new TextEncoder();
@@ -84,6 +85,7 @@ export function useCaptionChannel({
   participantName,
   role,
   patientLanguage,
+  extraTerms,
 }: UseCaptionChannelOptions) {
   const [finalCaptions, setFinalCaptions] = useState<NormalizedCaptionPayload[]>([]);
   const [transcriptCaptions, setTranscriptCaptions] = useState<NormalizedCaptionPayload[]>([]);
@@ -149,6 +151,7 @@ export function useCaptionChannel({
     stream,
     role,
     patientLanguage,
+    extraTerms,
     onCaption: publishCaption,
   });
 

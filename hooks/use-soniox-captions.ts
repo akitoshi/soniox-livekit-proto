@@ -7,6 +7,7 @@ import type {
 } from "@soniox/speech-to-text-web";
 
 import type { SonioxLanguageCode } from "@/lib/languages";
+import { buildMedicalContext } from "@/lib/medical-terms";
 import {
   getSonioxLanguageHints,
   getSonioxTranslationTarget,
@@ -28,6 +29,7 @@ type UseSonioxCaptionsOptions = {
   stream?: MediaStream;
   role: ParticipantRole;
   patientLanguage: SonioxLanguageCode;
+  extraTerms: readonly string[];
   onCaption: (caption: SonioxCaptionChunk) => void;
 };
 
@@ -45,6 +47,7 @@ export function useSonioxCaptions({
   stream,
   role,
   patientLanguage,
+  extraTerms,
   onCaption,
 }: UseSonioxCaptionsOptions) {
   const [status, setStatus] = useState<SonioxStatus>("idle");
@@ -166,13 +169,7 @@ export function useSonioxCaptions({
           languageHints: getSonioxLanguageHints(patientLanguage),
           enableLanguageIdentification: true,
           enableEndpointDetection: true,
-          context: {
-            general: [
-              { key: "domain", value: "Healthcare" },
-              { key: "topic", value: "Online medical consultation" },
-            ],
-            terms: ["オンライン診療", "既往歴", "処方薬", "アレルギー", "バイタルサイン"],
-          },
+          context: buildMedicalContext(extraTerms),
           translation: {
             type: "one_way",
             target_language: getSonioxTranslationTarget(role, patientLanguage),
@@ -211,7 +208,7 @@ export function useSonioxCaptions({
       clearFinalizeTimer();
       client?.cancel();
     };
-  }, [enabled, patientLanguage, role, stream]);
+  }, [enabled, extraTerms, patientLanguage, role, stream]);
 
   const unsupported = enabled && Boolean(stream) && isUnsupported;
   const effectiveStatus: SonioxStatus = unsupported
