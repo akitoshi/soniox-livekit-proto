@@ -56,9 +56,15 @@
   - tailnet 実機サーバ(3001)は新 UI ビルドで再稼働済み
   - SDK 発見: @soniox/speech-to-text-web の Context に translation_terms({source,target} 対訳ペア)がある — ブスコパン→Buscopan の翻訳固定が可能(wave 8 で採用)
 
+- wave 8 完了(2026-07-21): owt-4ki(e1f929b+fix 14d394e)・owt-fuy(ed2c5bd)→ merge・push 済み(main 14d394e)。gh#15/16 close 済み
+  - 検証: tsc / lint / test(7 files, 46 passed)/ build green。Soniox context 上限(8,000 tokens)は公式 docs 実確認で突合。実打で言語変更 es の伝搬・患者通知(1秒・5秒で自動消滅)・ガード動作を確認
+  - **実打で発見した赤**: LiveKit token grant に canUpdateOwnMetadata が無く setAttributes がサーバ拒否 → fix 14d394e(grant 1行)。/goal で app/api を変更禁止にした commander の許可リスト設計ミスが原因 — 学び: attributes/metadata 系のタスクでは token grant 面を許可リストに含めるか事前確認する
+  - es 実発話での翻訳生成は未確認(smoke 時無音)— ux-8 実機受入でブスコパンと併せて確認
+  - 学び: orca eval の戻りは result.result キー(value ではない)。--page 指定でバックグラウンドタブを並行操作できる(2タブ伝搬テストに有効)
+
 ## 次にやること
 
-- **wave 8 進行中**: ux-4(owt-4ki attributes 基盤+通話中言語変更 🔒)+ ux-5(owt-fuy 医療語彙 terms+translation_terms+カスタム語彙)を worktree `wave8-settings` で codex に委譲済み(gh#15/16)。完了後: commander 再検証(実打含む)→ merge → push → **ゲート2**(attributes という新外部入力面。CRITICAL/HIGH 0 まで wave 9 に進まない)
+- **ゲート2 実施中**: 履歴なし Fable で e5e4a5c..14d394e をレビュー中(attributes 攻撃耐性・なりすまし・context 注入・token grant 最小権限・Goodhart)。CRITICAL/HIGH 0 まで wave 9 に進まない
 - wave 9: ux-6(owt-rcb コピー医師限定+字幕UI)+ ux-7(owt-5zt docs)→ ux-8(owt-7wc 統合受入 — 人間、owt-9 併合)
 - owt-hcw(P3・任意): 再々ゲート LOW 3件。手すきの wave に同乗可
 - フェーズ完了時: 学びを ai-dev-kit 還元プロトコルで棚卸し
