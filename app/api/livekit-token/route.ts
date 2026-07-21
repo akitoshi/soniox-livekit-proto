@@ -73,6 +73,7 @@ export async function POST(request: Request) {
     canPublish: true,
     canSubscribe: true,
     canPublishData: true,
+    canUpdateOwnMetadata: true,
   });
 
   return NextResponse.json({
