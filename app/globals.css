@@ -112,6 +112,82 @@ input {
   }
 }
 
+.caption-size-s {
+  --caption-main-font-size: 1rem;
+  --caption-secondary-font-size: 0.6875rem;
+}
+
+.caption-size-m {
+  --caption-main-font-size: 1.125rem;
+  --caption-secondary-font-size: 0.75rem;
+}
+
+.caption-size-l {
+  --caption-main-font-size: 1.375rem;
+  --caption-secondary-font-size: 0.875rem;
+}
+
+.caption-surface-overlay {
+  --caption-doctor-accent: oklch(0.72 0.055 183 / 0.72);
+  --caption-doctor-label: oklch(0.86 0.045 183);
+  --caption-patient-accent: oklch(0.65 0.022 250 / 0.72);
+  --caption-patient-label: oklch(0.79 0.018 250);
+  --caption-secondary-color: oklch(0.7 0.018 250);
+}
+
+.caption-surface-history {
+  --caption-doctor-accent: color-mix(in oklab, var(--primary) 72%, var(--border));
+  --caption-doctor-label: var(--primary);
+  --caption-patient-accent: color-mix(
+    in oklab,
+    var(--muted-foreground) 62%,
+    var(--border)
+  );
+  --caption-patient-label: var(--muted-foreground);
+  --caption-secondary-color: var(--muted-foreground);
+}
+
+.caption-main {
+  font-size: var(--caption-main-font-size);
+  line-height: 1.55;
+}
+
+.caption-secondary {
+  color: var(--caption-secondary-color);
+  font-size: var(--caption-secondary-font-size);
+  line-height: 1.55;
+}
+
+.caption-role-doctor,
+.caption-role-patient {
+  border-inline-start-style: solid;
+  border-inline-start-width: 3px;
+}
+
+.caption-role-doctor {
+  border-inline-start-color: var(--caption-doctor-accent);
+}
+
+.caption-role-patient {
+  border-inline-start-color: var(--caption-patient-accent);
+}
+
+.caption-role-doctor .caption-speaker {
+  color: var(--caption-doctor-label);
+}
+
+.caption-role-patient .caption-speaker {
+  color: var(--caption-patient-label);
+}
+
+.caption-final {
+  opacity: 1;
+}
+
+.caption-interim {
+  opacity: 0.65;
+}
+
 .consultation-room {
   --consultation-pip-width: 9rem;
   --consultation-pip-height: 5.0625rem;

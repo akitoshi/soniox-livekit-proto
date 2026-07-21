@@ -13,9 +13,17 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import type { CaptionPayload } from "@/hooks/use-caption-channel";
-import { getCaptionPresentation } from "@/lib/caption-presentation";
+import {
+  CAPTION_SIZES,
+  getCaptionPresentation,
+  getCaptionRoleClass,
+  getCaptionSizeClass,
+  getCaptionStateClass,
+  type CaptionSize,
+} from "@/lib/caption-presentation";
 import type { SonioxLanguageCode } from "@/lib/languages";
 import { formatTranscript } from "@/lib/transcript-format";
+import { cn } from "@/lib/utils";
 
 type CaptionHistoryProps = {
   finalCaptions: CaptionPayload[];
@@ -23,6 +31,9 @@ type CaptionHistoryProps = {
   interimCaptions: CaptionPayload[];
   localParticipantIdentity: string;
   viewerLanguage: SonioxLanguageCode;
+  role: CaptionPayload["role"];
+  captionSize: CaptionSize;
+  onCaptionSizeChange: (size: CaptionSize) => void;
 };
 
 function CaptionText({
@@ -36,12 +47,12 @@ function CaptionText({
 
   return (
     <>
-      <p className="text-sm leading-6 text-foreground/90">{presentation.mainText}</p>
+      <p className="caption-main text-foreground/90">{presentation.mainText}</p>
       {presentation.secondaryText ? (
-        <div className="mt-2 flex gap-2 rounded-lg bg-primary/8 p-2.5 text-xs leading-5 text-muted-foreground">
-          <Translate className="mt-0.5 shrink-0 text-primary/75" size={15} weight="bold" />
+        <div className="caption-secondary mt-2 flex gap-2 rounded-lg bg-primary/8 p-2.5">
+          <Translate className="caption-speaker mt-0.5 shrink-0" size={15} weight="bold" />
           <div>
-            <p className="mb-0.5 font-mono text-[10px] font-semibold uppercase text-muted-foreground">
+            <p className="mb-0.5 font-mono text-[10px] font-semibold uppercase">
               {presentation.secondaryLabel}
               {presentation.secondaryLanguage ? ` ${presentation.secondaryLanguage}` : ""}
             </p>
@@ -67,6 +78,9 @@ export function CaptionHistory({
   interimCaptions,
   localParticipantIdentity,
   viewerLanguage,
+  role,
+  captionSize,
+  onCaptionSizeChange,
 }: CaptionHistoryProps) {
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
   const hasTranscript = transcriptCaptions.length > 0;
@@ -84,7 +98,9 @@ export function CaptionHistory({
   }
 
   return (
-    <SheetContent>
+    <SheetContent
+      className={cn("caption-surface-history", getCaptionSizeClass(captionSize))}
+    >
       <SheetHeader>
         <SheetTitle className="flex items-center gap-2">
           <ChatText size={20} weight="bold" />
@@ -93,26 +109,58 @@ export function CaptionHistory({
         <SheetDescription>
           この履歴はブラウザのメモリ内だけに保持され、ページを閉じると消去されます。
         </SheetDescription>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="mt-2 w-fit border-slate-300/70 text-slate-700 hover:bg-teal-50 hover:text-teal-800"
-          onClick={copyTranscript}
-          disabled={!hasTranscript}
-          aria-label="確定済み会話ログ全文をコピー"
-        >
-          {copyStatus === "copied" ? (
-            <Check size={16} weight="bold" />
-          ) : (
-            <Copy size={16} weight="bold" />
-          )}
-          {copyStatus === "copied"
-            ? "コピーしました"
-            : copyStatus === "error"
-              ? "コピーできませんでした"
-              : "全文をコピー"}
-        </Button>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <div
+            className="flex items-center gap-1 rounded-xl border bg-muted/35 p-1"
+            role="group"
+            aria-label="字幕サイズ"
+          >
+            <span className="px-1.5 text-xs font-semibold text-muted-foreground">
+              サイズ
+            </span>
+            {CAPTION_SIZES.map((size) => (
+              <Button
+                key={size}
+                type="button"
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "size-8 px-0 text-xs text-muted-foreground",
+                  captionSize === size &&
+                    "bg-teal-100 text-teal-900 hover:bg-teal-100 hover:text-teal-900",
+                )}
+                onClick={() => onCaptionSizeChange(size)}
+                aria-label={`字幕サイズ ${size}`}
+                aria-pressed={captionSize === size}
+              >
+                {size}
+              </Button>
+            ))}
+          </div>
+
+          {role === "doctor" ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-fit border-slate-300/70 text-slate-700 hover:bg-teal-50 hover:text-teal-800"
+              onClick={copyTranscript}
+              disabled={!hasTranscript}
+              aria-label="確定済み会話ログ全文をコピー"
+            >
+              {copyStatus === "copied" ? (
+                <Check size={16} weight="bold" />
+              ) : (
+                <Copy size={16} weight="bold" />
+              )}
+              {copyStatus === "copied"
+                ? "コピーしました"
+                : copyStatus === "error"
+                  ? "コピーできませんでした"
+                  : "全文をコピー"}
+            </Button>
+          ) : null}
+        </div>
       </SheetHeader>
 
       <ScrollArea className="min-h-0 flex-1 px-6 pb-6">
@@ -133,9 +181,18 @@ export function CaptionHistory({
               );
 
               return (
-                <article key={`${caption.participantIdentity}-${caption.timestamp}-${index}`}>
+                <article
+                  key={`${caption.participantIdentity}-${caption.timestamp}-${index}`}
+                  className={cn(
+                    "rounded-r-lg py-1 pl-3",
+                    getCaptionRoleClass(caption.role),
+                    getCaptionStateClass(caption.isFinal),
+                  )}
+                >
                   <div className="mb-1.5 flex items-center gap-2">
-                    <p className="text-sm font-semibold">{caption.participantName}</p>
+                    <p className="caption-speaker text-sm font-semibold">
+                      {caption.participantName}
+                    </p>
                     {presentation.mainLanguage ? (
                       <Badge variant="secondary">{presentation.mainLanguage}</Badge>
                     ) : null}
@@ -152,9 +209,18 @@ export function CaptionHistory({
             })}
 
             {interimCaptions.map((caption) => (
-              <article key={`interim-${caption.participantIdentity}`} className="opacity-60">
+              <article
+                key={`interim-${caption.participantIdentity}`}
+                className={cn(
+                  "rounded-r-lg py-1 pl-3",
+                  getCaptionRoleClass(caption.role),
+                  getCaptionStateClass(caption.isFinal),
+                )}
+              >
                 <div className="mb-1.5 flex items-center gap-2">
-                  <p className="text-sm font-semibold">{caption.participantName}</p>
+                  <p className="caption-speaker text-sm font-semibold">
+                    {caption.participantName}
+                  </p>
                   <Badge variant="outline">認識中</Badge>
                 </div>
                 <CaptionText

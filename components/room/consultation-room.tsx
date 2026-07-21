@@ -35,6 +35,7 @@ import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { useCaptionChannel } from "@/hooks/use-caption-channel";
 import { useCameraFacing } from "@/hooks/use-camera-facing";
+import type { CaptionSize } from "@/lib/caption-presentation";
 import { getLanguage, type SonioxLanguageCode } from "@/lib/languages";
 import type { SessionSettings } from "@/lib/session-settings";
 import type { ParticipantRole } from "@/lib/soniox-tokens";
@@ -76,6 +77,7 @@ export function ConsultationRoom({
     microphoneTrack,
   } = useLocalParticipant({ room });
   const [captionsEnabled, setCaptionsEnabled] = useState(true);
+  const [captionSize, setCaptionSize] = useState<CaptionSize>("M");
   const [controlError, setControlError] = useState<string | null>(null);
   const patientLanguage = sessionSettings.patientLanguage;
   const announcedLanguage = languageAnnouncement
@@ -220,6 +222,7 @@ export function ConsultationRoom({
             finalCaptions={finalCaptions}
             interimCaptions={interimCaptions}
             localParticipantIdentity={participantIdentity}
+            captionSize={captionSize}
           />
 
           {isReconnecting ? (
@@ -354,6 +357,9 @@ export function ConsultationRoom({
         interimCaptions={interimCaptions}
         localParticipantIdentity={participantIdentity}
         viewerLanguage={role === "doctor" ? "ja" : patientLanguage}
+        role={role}
+        captionSize={captionSize}
+        onCaptionSizeChange={setCaptionSize}
       />
     </Sheet>
   );

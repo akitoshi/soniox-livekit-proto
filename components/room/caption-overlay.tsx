@@ -3,7 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { CaptionPayload } from "@/hooks/use-caption-channel";
-import { getCaptionPresentation } from "@/lib/caption-presentation";
+import {
+  getCaptionOverlayItems,
+  getCaptionPresentation,
+  getCaptionRoleClass,
+  getCaptionSizeClass,
+  getCaptionStateClass,
+  type CaptionSize,
+} from "@/lib/caption-presentation";
 import { cn } from "@/lib/utils";
 
 type CaptionOverlayProps = {
@@ -11,15 +18,15 @@ type CaptionOverlayProps = {
   finalCaptions: CaptionPayload[];
   interimCaptions: CaptionPayload[];
   localParticipantIdentity: string;
+  captionSize: CaptionSize;
 };
-
-const CAPTION_VISIBLE_MS = 12_000;
 
 export function CaptionOverlay({
   enabled,
   finalCaptions,
   interimCaptions,
   localParticipantIdentity,
+  captionSize,
 }: CaptionOverlayProps) {
   const [now, setNow] = useState(() => Date.now());
 
@@ -29,19 +36,17 @@ export function CaptionOverlay({
   }, []);
 
   const captions = useMemo(() => {
-    const recentFinal = finalCaptions.filter(
-      (caption) => now - caption.timestamp < CAPTION_VISIBLE_MS,
-    );
-    return [...recentFinal, ...interimCaptions]
-      .sort((a, b) => a.timestamp - b.timestamp)
-      .slice(-3);
+    return getCaptionOverlayItems(finalCaptions, interimCaptions, now);
   }, [finalCaptions, interimCaptions, now]);
 
   if (!enabled || captions.length === 0) return null;
 
   return (
     <div
-      className="consultation-caption-safe pointer-events-none absolute z-20 mx-auto flex max-w-3xl flex-col items-center gap-2"
+      className={cn(
+        "caption-surface-overlay consultation-caption-safe pointer-events-none absolute z-20 mx-auto flex max-w-3xl flex-col items-center gap-2",
+        getCaptionSizeClass(captionSize),
+      )}
       aria-live="polite"
       aria-atomic="false"
     >
@@ -55,24 +60,25 @@ export function CaptionOverlay({
           <div
             key={`${caption.participantIdentity}-${caption.timestamp}-${caption.isFinal}`}
             className={cn(
-              "max-w-full animate-[caption-in_180ms_ease-out] rounded-xl border border-white/10 bg-slate-950/82 px-4 py-2.5 text-center text-sm text-slate-50 shadow-lg backdrop-blur-md md:text-base",
-              !caption.isFinal && "text-slate-300/65",
+              "max-w-full animate-[caption-in_180ms_ease-out] break-words rounded-xl border border-white/10 bg-slate-950/82 px-4 py-2.5 text-left text-slate-50 shadow-lg backdrop-blur-md",
+              getCaptionRoleClass(caption.role),
+              getCaptionStateClass(caption.isFinal),
             )}
           >
-            <div>
-              <span className="mr-2 font-semibold text-teal-200">
+            <div className="caption-main">
+              <span className="caption-speaker mr-2 text-sm font-semibold">
                 {caption.participantName}
               </span>
               {presentation.mainLanguage ? (
-                <span className="mr-2 font-mono text-[10px] font-semibold uppercase text-teal-200/80">
+                <span className="caption-speaker mr-2 font-mono text-[10px] font-semibold uppercase">
                   {presentation.mainLanguage}
                 </span>
               ) : null}
               <span>{presentation.mainText}</span>
             </div>
             {presentation.secondaryText ? (
-              <div className="mt-1 border-t border-white/10 pt-1.5 text-xs leading-5 text-slate-400 md:text-sm">
-                <span className="mr-2 font-semibold text-slate-500">
+              <div className="caption-secondary mt-1 border-t border-white/10 pt-1.5">
+                <span className="mr-2 font-semibold">
                   {presentation.secondaryLabel}
                   {presentation.secondaryLanguage
                     ? ` ${presentation.secondaryLanguage}`
