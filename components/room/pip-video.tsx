@@ -1,9 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ParticipantTile, type TrackReference } from "@livekit/components-react";
-import { VideoCameraSlash } from "@phosphor-icons/react";
+import {
+  ParticipantTile,
+  type TrackReference,
+  useSpeakingParticipants,
+} from "@livekit/components-react";
+import { MicrophoneSlash, VideoCameraSlash } from "@phosphor-icons/react";
 import type { Participant } from "livekit-client";
+
+import { useParticipantMicrophoneMuted } from "@/hooks/use-participant-microphone-muted";
 
 type PipVideoProps = {
   tracks: TrackReference[];
@@ -17,6 +23,8 @@ export function PipVideo({
   remoteParticipant,
 }: PipVideoProps) {
   const [isLocalMain, setIsLocalMain] = useState(false);
+  const activeSpeakers = useSpeakingParticipants();
+  const isRemoteMuted = useParticipantMicrophoneMuted(remoteParticipant);
 
   const { localTrack, remoteTrack } = useMemo(
     () => ({
@@ -39,6 +47,10 @@ export function PipVideo({
       : localParticipant
     : undefined;
   const pipTrack = pipParticipant?.isLocal ? localTrack : remoteTrack;
+  const activeSpeakerIdentities = useMemo(
+    () => new Set(activeSpeakers.map((participant) => participant.identity)),
+    [activeSpeakers],
+  );
 
   return (
     <section className="consultation-stage" aria-label="通話映像">
@@ -46,6 +58,11 @@ export function PipVideo({
         participant={mainParticipant}
         track={mainTrack}
         className="consultation-main-video"
+        isSpeaking={
+          mainParticipant.isSpeaking ||
+          activeSpeakerIdentities.has(mainParticipant.identity)
+        }
+        isMicrophoneMuted={!mainParticipant.isLocal && isRemoteMuted}
       />
 
       {pipParticipant ? (
@@ -59,6 +76,11 @@ export function PipVideo({
             participant={pipParticipant}
             track={pipTrack}
             className="consultation-pip-video"
+            isSpeaking={
+              pipParticipant.isSpeaking ||
+              activeSpeakerIdentities.has(pipParticipant.identity)
+            }
+            isMicrophoneMuted={!pipParticipant.isLocal && isRemoteMuted}
           />
           <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/85 to-transparent px-2.5 pb-2 pt-6 text-left text-[11px] font-semibold text-slate-100">
             {pipParticipant.isLocal ? "自分" : "相手"}
@@ -77,29 +99,44 @@ function VideoSurface({
   participant,
   track,
   className,
+  isSpeaking,
+  isMicrophoneMuted,
 }: {
   participant: Participant;
   track?: TrackReference;
   className: string;
+  isSpeaking: boolean;
+  isMicrophoneMuted: boolean;
 }) {
-  if (track) {
-    return (
-      <ParticipantTile
-        trackRef={track}
-        className={className}
-        disableSpeakingIndicator
-      />
-    );
-  }
-
   return (
-    <div className={`${className} flex items-center justify-center bg-slate-900`}>
-      <div className="flex flex-col items-center gap-2 px-4 text-center text-slate-400">
-        <VideoCameraSlash size={26} weight="bold" />
-        <span className="text-xs font-semibold">
-          {participant.isLocal ? "カメラがオフです" : "相手のカメラがオフです"}
-        </span>
-      </div>
+    <div className={className} data-speaking={isSpeaking}>
+      {track ? (
+        <ParticipantTile
+          trackRef={track}
+          className="consultation-video-tile"
+          disableSpeakingIndicator
+        />
+      ) : (
+        <div className="flex h-full items-center justify-center bg-slate-900">
+          <div className="flex flex-col items-center gap-2 px-4 text-center text-slate-400">
+            <VideoCameraSlash size={26} weight="bold" />
+            <span className="text-xs font-semibold">
+              {participant.isLocal ? "カメラがオフです" : "相手のカメラがオフです"}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {isMicrophoneMuted ? (
+        <div
+          role="status"
+          className="consultation-muted-indicator"
+          aria-label="相手のマイクはミュートされています"
+        >
+          <MicrophoneSlash aria-hidden="true" size={15} weight="bold" />
+          <span>ミュート中</span>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -16,6 +16,7 @@ import {
   Microphone,
   MicrophoneSlash,
   PhoneDisconnect,
+  SpinnerGap,
   Stethoscope,
   Subtitles,
   VideoCamera,
@@ -93,6 +94,7 @@ export function ConsultationRoom({
   });
 
   const isConnected = connectionState === ConnectionState.Connected;
+  const isReconnecting = connectionState === ConnectionState.Reconnecting;
   const subtitleStatus =
     sonioxStatus === "listening"
       ? "字幕配信中"
@@ -192,10 +194,24 @@ export function ConsultationRoom({
             localParticipantIdentity={participantIdentity}
           />
 
+          {isReconnecting ? (
+            <div
+              role="status"
+              aria-live="polite"
+              className="absolute inset-x-4 top-3 z-40 mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-xl border border-teal-200/20 bg-slate-900/92 px-3.5 py-2 text-xs font-semibold text-teal-100 shadow-lg backdrop-blur"
+            >
+              <SpinnerGap className="animate-spin" size={16} weight="bold" />
+              再接続中…
+            </div>
+          ) : null}
+
           {sonioxError || controlError ? (
             <div
               role="alert"
-              className="absolute inset-x-4 top-4 z-30 mx-auto flex max-w-xl items-start gap-2 rounded-xl border border-rose-300/20 bg-rose-950/90 p-3 text-xs text-rose-100 shadow-lg backdrop-blur"
+              className={cn(
+                "absolute inset-x-4 z-30 mx-auto flex max-w-xl items-start gap-2 rounded-xl border border-rose-300/20 bg-rose-950/90 p-3 text-xs text-rose-100 shadow-lg backdrop-blur",
+                isReconnecting ? "top-16" : "top-4",
+              )}
             >
               <WarningCircle className="shrink-0" size={17} weight="fill" />
               <span>{controlError ?? sonioxError}</span>
