@@ -162,7 +162,7 @@ export function ConsultationRoom({
   return (
     <Sheet>
       <div className="consultation-room relative flex min-h-[100dvh] flex-col overflow-hidden bg-slate-950 text-slate-50">
-        <header className="consultation-header-safe flex min-h-16 shrink-0 items-center gap-3 border-b border-white/10 bg-slate-950/95 px-4 backdrop-blur md:px-6">
+        <header className="consultation-header-safe relative isolate z-50 flex min-h-16 shrink-0 items-center gap-3 border-b border-white/10 bg-slate-950/95 px-4 backdrop-blur md:px-6">
           <span className="flex size-9 items-center justify-center rounded-xl bg-teal-600 text-white">
             <Stethoscope size={20} weight="bold" />
           </span>
