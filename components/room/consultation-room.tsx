@@ -3,8 +3,6 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  GridLayout,
-  ParticipantTile,
   RoomAudioRenderer,
   useConnectionState,
   useLocalParticipant,
@@ -28,6 +26,7 @@ import { ConnectionState, Track } from "livekit-client";
 
 import { CaptionHistory } from "@/components/room/caption-history";
 import { CaptionOverlay } from "@/components/room/caption-overlay";
+import { PipVideo } from "@/components/room/pip-video";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
@@ -68,6 +67,7 @@ export function ConsultationRoom({
   } = useLocalParticipant({ room });
   const [captionsEnabled, setCaptionsEnabled] = useState(true);
   const [controlError, setControlError] = useState<string | null>(null);
+  const remoteParticipant = participants.find((participant) => !participant.isLocal);
 
   const mediaStreamTrack = microphoneTrack?.track?.mediaStreamTrack;
   const microphoneStream = useMemo(
@@ -145,8 +145,8 @@ export function ConsultationRoom({
 
   return (
     <Sheet>
-      <div className="relative flex min-h-[100dvh] flex-col overflow-hidden bg-slate-950 text-slate-50">
-        <header className="flex h-16 shrink-0 items-center gap-3 border-b border-white/10 bg-slate-950/95 px-4 backdrop-blur md:px-6">
+      <div className="consultation-room relative flex min-h-[100dvh] flex-col overflow-hidden bg-slate-950 text-slate-50">
+        <header className="consultation-header-safe flex min-h-16 shrink-0 items-center gap-3 border-b border-white/10 bg-slate-950/95 px-4 backdrop-blur md:px-6">
           <span className="flex size-9 items-center justify-center rounded-xl bg-teal-600 text-white">
             <Stethoscope size={20} weight="bold" />
           </span>
@@ -177,16 +177,13 @@ export function ConsultationRoom({
           </div>
         </header>
 
-        <main className="relative min-h-0 flex-1 p-3 pb-24 md:p-5 md:pb-28">
-          <GridLayout tracks={tracks} className="consultation-grid">
-            <ParticipantTile />
-          </GridLayout>
-
-          {participants.length === 1 ? (
-            <div className="pointer-events-none absolute inset-x-6 top-8 z-10 mx-auto max-w-md rounded-xl border border-white/10 bg-slate-900/80 p-3 text-center text-sm text-slate-300 backdrop-blur">
-              同じルーム名で相手が参加するのを待っています。
-            </div>
-          ) : null}
+        <main className="relative min-h-0 flex-1 md:p-4">
+          <PipVideo
+            key={remoteParticipant?.identity ?? "waiting"}
+            tracks={tracks}
+            localParticipant={localParticipant}
+            remoteParticipant={remoteParticipant}
+          />
 
           <CaptionOverlay
             enabled={captionsEnabled}
@@ -206,7 +203,7 @@ export function ConsultationRoom({
           ) : null}
         </main>
 
-        <div className="absolute inset-x-0 bottom-0 z-30 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:px-6 md:pb-5">
+        <div className="consultation-controls-safe absolute inset-x-0 bottom-0 z-30">
           <div className="mx-auto flex w-fit max-w-full items-center gap-1.5 rounded-2xl border border-white/10 bg-slate-900/92 p-2 shadow-2xl backdrop-blur-xl md:gap-2">
             <Button
               type="button"

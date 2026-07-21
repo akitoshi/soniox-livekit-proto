@@ -112,36 +112,125 @@ input {
   }
 }
 
-.consultation-grid.lk-grid-layout {
-  --lk-col-count: 1;
-  --lk-row-count: 1;
-  display: grid;
+.consultation-room {
+  --consultation-pip-width: clamp(7rem, 28vw, 13rem);
+  --consultation-controls-clearance: calc(4.75rem + env(safe-area-inset-bottom));
+}
+
+.consultation-header-safe {
+  min-height: calc(4rem + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+.consultation-stage {
+  position: relative;
   height: 100%;
-  gap: 0.75rem;
-  padding: 0;
-}
-
-.consultation-grid .lk-participant-tile {
+  min-height: 0;
   overflow: hidden;
-  border: 1px solid color-mix(in oklab, var(--border) 78%, transparent);
-  border-radius: 1rem;
-  background: oklch(0.19 0.016 190);
-  box-shadow: 0 20px 50px -32px oklch(0.05 0.01 190 / 0.8);
+  background: oklch(0.16 0.016 190);
 }
 
-.consultation-grid .lk-participant-tile video {
+.consultation-main-video,
+.consultation-pip-video {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: oklch(0.19 0.016 190);
+}
+
+.consultation-main-video video,
+.consultation-pip-video video {
+  height: 100%;
+  width: 100%;
   object-fit: cover;
 }
 
-.consultation-grid .lk-participant-metadata {
+.consultation-main-video .lk-participant-metadata,
+.consultation-pip-video .lk-participant-metadata {
   border-radius: 0.6rem;
   background: oklch(0.14 0.012 190 / 0.78);
   color: oklch(0.96 0.006 190);
   backdrop-filter: blur(10px);
 }
 
+.consultation-pip-video .lk-participant-metadata,
+.consultation-pip-video .lk-focus-toggle-button {
+  display: none;
+}
+
+.consultation-pip {
+  position: absolute;
+  right: max(0.75rem, env(safe-area-inset-right));
+  bottom: var(--consultation-controls-clearance);
+  z-index: 15;
+  width: var(--consultation-pip-width);
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px solid oklch(0.82 0.025 190 / 0.38);
+  border-radius: 0.9rem;
+  background: oklch(0.19 0.016 190);
+  box-shadow: 0 18px 45px -18px oklch(0.04 0.014 190 / 0.88);
+  outline: none;
+  transition: transform 180ms ease;
+}
+
+.consultation-pip:hover {
+  border-color: oklch(0.72 0.07 183 / 0.72);
+  transform: translateY(-2px);
+}
+
+.consultation-pip:active {
+  transform: scale(0.98);
+}
+
+.consultation-pip:focus-visible {
+  border-color: oklch(0.76 0.08 183);
+  box-shadow:
+    0 0 0 3px oklch(0.7 0.08 183 / 0.42),
+    0 18px 45px -18px oklch(0.04 0.014 190 / 0.88);
+}
+
+.consultation-controls-safe {
+  padding-right: max(0.75rem, env(safe-area-inset-right));
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  padding-left: max(0.75rem, env(safe-area-inset-left));
+}
+
+.consultation-caption-safe {
+  right: max(0.75rem, env(safe-area-inset-right));
+  bottom: calc(
+    var(--consultation-controls-clearance) + (var(--consultation-pip-width) * 0.75) + 0.75rem
+  );
+  left: max(0.75rem, env(safe-area-inset-left));
+}
+
 @media (min-width: 768px) {
-  .consultation-grid.lk-grid-layout {
-    gap: 1rem;
+  .consultation-room {
+    --consultation-controls-clearance: calc(5.75rem + env(safe-area-inset-bottom));
+  }
+
+  .consultation-header-safe {
+    padding-left: max(1.5rem, env(safe-area-inset-left));
+    padding-right: max(1.5rem, env(safe-area-inset-right));
+  }
+
+  .consultation-stage {
+    border: 1px solid color-mix(in oklab, var(--border) 78%, transparent);
+    border-radius: 1rem;
+    box-shadow: 0 20px 50px -32px oklch(0.05 0.01 190 / 0.8);
+  }
+
+  .consultation-controls-safe {
+    padding-right: max(1.5rem, env(safe-area-inset-right));
+    padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+    padding-left: max(1.5rem, env(safe-area-inset-left));
+  }
+
+  .consultation-caption-safe {
+    right: calc(var(--consultation-pip-width) + max(1.5rem, env(safe-area-inset-right)) + 1rem);
+    bottom: var(--consultation-controls-clearance);
+    left: max(1.5rem, env(safe-area-inset-left));
   }
 }

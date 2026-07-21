@@ -41,7 +41,7 @@ export function CaptionOverlay({
 
   return (
     <div
-      className="pointer-events-none absolute inset-x-3 bottom-24 z-20 mx-auto flex max-w-3xl flex-col items-center gap-2 md:bottom-28"
+      className="consultation-caption-safe pointer-events-none absolute z-20 mx-auto flex max-w-3xl flex-col items-center gap-2"
       aria-live="polite"
       aria-atomic="false"
     >
