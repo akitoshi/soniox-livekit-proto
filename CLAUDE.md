@@ -4,7 +4,7 @@
 
 LiveKit × Soniox によるオンライン診療(多言語・国際クリニック向け)の**参照実装プロトタイプ**。他プロジェクトへ組み込むための「正しい組み合わせ方」を磨き上げる+デモ用途(見た目・安定性)。ドメイン語彙は CONTEXT.md が単一情報源。
 
-現フェーズ: 翻訳の one_way×2 化+会話ログコピー(docs/prds/one-way-translation.md)。認証・DB・永続化は**このリポでは導入しない**(設計のみ docs/design/ に記録)。
+現フェーズ: 診療 UX 改善 — PiP レイアウト・通話中設定変更・医療語彙(docs/prds/consultation-ux.md、2026-07-21 実機フィードバック起点)。フェーズ1(one_way×2+コピー、docs/prds/one-way-translation.md)は実装完了・受入は ux-8 に統合。認証・DB・永続化は**このリポでは導入しない**(設計のみ docs/design/ に記録)。
 
 ## 技術スタック
 
