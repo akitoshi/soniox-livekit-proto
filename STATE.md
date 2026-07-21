@@ -66,11 +66,16 @@
   - MEDIUM 流し込み: owt-138(consult.settings の送信者無検証 — 第三参加者による設定操作・再起動チャーン。**受容 or 対応は人間専管、判断待ち**。修正案: 再起動デバウンス+docs/design 要件明記)
   - LOW 流し込み: owt-l5d(語彙累積バジェット / setName 副次解放 / 不可視文字 — P3 任意)
 
-## 次にやること
+- wave 9 完了(2026-07-21): owt-rcb(2262f03)・owt-5zt(1816f9c)→ merge・push 済み(main 1816f9c)。gh#17/18 close 済み
+  - 検証: tsc / lint / test(7 files, 51 passed)/ build green。実打で医師=コピーあり/患者=なし+S/M/L 切替(履歴シート内)を確認。README はブスコパン fixture 手順・consult.settings 節を含み現物突合済み
+  - tailnet 実機サーバ(3001)はフェーズ2全機能入りの最新ビルド(1816f9c)で稼働中
 
-- **wave 9 進行中**: ux-6(owt-rcb コピー医師限定+字幕階層・S/M/L)+ ux-7(owt-5zt README 更新+ブスコパン fixture 手順)を worktree `wave9-captions-docs` で codex に委譲済み(gh#17/18)。完了後: commander 再検証(実打+スクショ)→ merge → push
-- **人間判断待ち**: owt-138(ゲート2 MEDIUM)。対応なら wave 9 後の小修正で
-- wave 9 後: ux-8(owt-7wc 統合受入 — 人間の実機確認: 新 UI 全項目+ブスコパン発話+es 翻訳、owt-9 併合 close)→ フェーズ2完了処理(学び棚卸し)
+## 次にやること(人間待ちのみ)
+
+- **ux-8(owt-7wc)統合受入 — 人間の実機確認**: https://mnp.minmi-opah.ts.net:8443(iPhone、Tailscale ON)+ PC http://localhost:3001。確認項目: PiP レイアウト/入替/カメラ切替/ミュート・話者表示/通話中の言語変更(医師の歯車→患者に通知)/字幕階層(相手=翻訳メイン)/S/M/L/医師のみコピー/**ブスコパン発話 fixture**(README の手動テスト手順 15 が正)。pass で owt-7wc+owt-9 を close しフェーズ2完了
+- **人間判断待ち**: owt-138(ゲート2 MEDIUM: consult.settings 送信者無検証)。対応なら受入前後に小修正 wave(デバウンス+docs/design 追記)
+- owt-l5d / owt-hcw(P3 LOW 束ね ×2): 任意タイミング
+- フェーズ2完了時: 学びを ai-dev-kit 還元プロトコルで棚卸し(wave 1〜9 分を docs/feedback-loop.md 手順で)
 - wave 9: ux-6(owt-rcb コピー医師限定+字幕UI)+ ux-7(owt-5zt docs)→ ux-8(owt-7wc 統合受入 — 人間、owt-9 併合)
 - owt-hcw(P3・任意): 再々ゲート LOW 3件。手すきの wave に同乗可
 - フェーズ完了時: 学びを ai-dev-kit 還元プロトコルで棚卸し
