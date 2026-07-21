@@ -62,9 +62,15 @@
   - es 実発話での翻訳生成は未確認(smoke 時無音)— ux-8 実機受入でブスコパンと併せて確認
   - 学び: orca eval の戻りは result.result キー(value ではない)。--page 指定でバックグラウンドタブを並行操作できる(2タブ伝搬テストに有効)
 
+- ゲート2 PASS(2026-07-21): 対象 e5e4a5c..14d394e。**CRITICAL 0 / HIGH 0 / MEDIUM 1 / LOW 3**(Fable 履歴なし、独立再実行 green、Goodhart 違反ゼロ、token grant は最小権限判定)
+  - MEDIUM 流し込み: owt-138(consult.settings の送信者無検証 — 第三参加者による設定操作・再起動チャーン。**受容 or 対応は人間専管、判断待ち**。修正案: 再起動デバウンス+docs/design 要件明記)
+  - LOW 流し込み: owt-l5d(語彙累積バジェット / setName 副次解放 / 不可視文字 — P3 任意)
+
 ## 次にやること
 
-- **ゲート2 実施中**: 履歴なし Fable で e5e4a5c..14d394e をレビュー中(attributes 攻撃耐性・なりすまし・context 注入・token grant 最小権限・Goodhart)。CRITICAL/HIGH 0 まで wave 9 に進まない
+- **wave 9 進行中**: ux-6(owt-rcb コピー医師限定+字幕階層・S/M/L)+ ux-7(owt-5zt README 更新+ブスコパン fixture 手順)を worktree `wave9-captions-docs` で codex に委譲済み(gh#17/18)。完了後: commander 再検証(実打+スクショ)→ merge → push
+- **人間判断待ち**: owt-138(ゲート2 MEDIUM)。対応なら wave 9 後の小修正で
+- wave 9 後: ux-8(owt-7wc 統合受入 — 人間の実機確認: 新 UI 全項目+ブスコパン発話+es 翻訳、owt-9 併合 close)→ フェーズ2完了処理(学び棚卸し)
 - wave 9: ux-6(owt-rcb コピー医師限定+字幕UI)+ ux-7(owt-5zt docs)→ ux-8(owt-7wc 統合受入 — 人間、owt-9 併合)
 - owt-hcw(P3・任意): 再々ゲート LOW 3件。手すきの wave に同乗可
 - フェーズ完了時: 学びを ai-dev-kit 還元プロトコルで棚卸し
