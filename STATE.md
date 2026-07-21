@@ -50,10 +50,15 @@
 - フェーズ2開始(2026-07-21): 実機フィードバック(Zoom 比の UX 差・ブスコパン等の医療語彙誤認識)→ PRD/plan 起草・bd DAG 起票(commit b4e4dec)。P2 候補は全採用+医療語彙+字幕UI改善(人間承認済み)
   - Tailscale serve で実機確認環境構築済み: https://mnp.minmi-opah.ts.net:8443 → localhost:3001(本番ビルド、nohup デタッチ稼働中。PID: scratchpad/owt9-server.pid)。iPhone(iphone-15)は tailnet 登録済み
 
+- wave 7 完了(2026-07-21): owt-0gs(2eedac2+fix a8c96e4)・owt-ntb(4d7c293)・owt-tot(7fac86b)→ merge・push 済み(main a8c96e4)。gh#12/13/14 close 済み
+  - 検証: tsc / lint / test(34)/ build green。実打 smoke で初回レイアウト赤(ステージ h=50px 潰れ・PiP 画面外)→ DOM rect 実測値を添えて同一セッション再委譲 → fix 後にジオメトリ実測(stage h=1206・PiP 画面内)+スクショで green
+  - 学び: (1) 視覚系 wave は unit 全 green でもレイアウト崩壊があり得る — スクショ+getBoundingClientRect 実測を smoke に必須化。(2) aspect-ratio でステージ高さを決めると portrait viewport で破綻(bd note 済み)。(3) 修正再委譲は orca terminal send で同一 codex セッションに実測データ付きで送るのが速い(2分40秒で修正完了)
+  - tailnet 実機サーバ(3001)は新 UI ビルドで再稼働済み
+  - SDK 発見: @soniox/speech-to-text-web の Context に translation_terms({source,target} 対訳ペア)がある — ブスコパン→Buscopan の翻訳固定が可能(wave 8 で採用)
+
 ## 次にやること
 
-- **wave 7 進行中**: ux-1/2/3(owt-0gs PiP・owt-ntb ミュート/話者/再接続・owt-tot カメラ切替)を worktree `wave7-ux-visual` で codex に委譲済み(gh#12/13/14)。完了後: commander 再検証 → merge → push
-- wave 8: ux-4(owt-4ki attributes 基盤+通話中言語変更 🔒)+ ux-5(owt-fuy 医療語彙)束ね → **ゲート2**(attributes という新外部入力面)
+- **wave 8 進行中**: ux-4(owt-4ki attributes 基盤+通話中言語変更 🔒)+ ux-5(owt-fuy 医療語彙 terms+translation_terms+カスタム語彙)を worktree `wave8-settings` で codex に委譲済み(gh#15/16)。完了後: commander 再検証(実打含む)→ merge → push → **ゲート2**(attributes という新外部入力面。CRITICAL/HIGH 0 まで wave 9 に進まない)
 - wave 9: ux-6(owt-rcb コピー医師限定+字幕UI)+ ux-7(owt-5zt docs)→ ux-8(owt-7wc 統合受入 — 人間、owt-9 併合)
 - owt-hcw(P3・任意): 再々ゲート LOW 3件。手すきの wave に同乗可
 - フェーズ完了時: 学びを ai-dev-kit 還元プロトコルで棚卸し
