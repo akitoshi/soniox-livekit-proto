@@ -33,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { useCaptionChannel } from "@/hooks/use-caption-channel";
+import { useCameraFacing } from "@/hooks/use-camera-facing";
 import type { SonioxLanguageCode } from "@/lib/languages";
 import type { ParticipantRole } from "@/lib/soniox-tokens";
 import { cn } from "@/lib/utils";
@@ -69,6 +70,13 @@ export function ConsultationRoom({
   const [captionsEnabled, setCaptionsEnabled] = useState(true);
   const [controlError, setControlError] = useState<string | null>(null);
   const remoteParticipant = participants.find((participant) => !participant.isLocal);
+  const {
+    canSwitchCamera,
+    isSwitchingCamera,
+    cameraSwitchError,
+    switchCamera,
+    clearCameraSwitchError,
+  } = useCameraFacing(room);
 
   const mediaStreamTrack = microphoneTrack?.track?.mediaStreamTrack;
   const microphoneStream = useMemo(
@@ -118,26 +126,17 @@ export function ConsultationRoom({
 
   async function toggleCamera() {
     setControlError(null);
+    clearCameraSwitchError();
     try {
-      await localParticipant.setCameraEnabled(!isCameraEnabled, { facingMode: "user" });
+      await localParticipant.setCameraEnabled(!isCameraEnabled);
     } catch {
       setControlError("カメラを切り替えられませんでした。");
     }
   }
 
-  async function switchCamera() {
-    const cameraTrack = localParticipant.getTrackPublication(Track.Source.Camera)?.track;
-    if (!cameraTrack || !("restartTrack" in cameraTrack)) return;
-
+  async function switchFacingCamera() {
     setControlError(null);
-    try {
-      const settings = cameraTrack.mediaStreamTrack.getSettings();
-      await cameraTrack.restartTrack({
-        facingMode: settings.facingMode === "environment" ? "user" : "environment",
-      });
-    } catch {
-      setControlError("カメラの向きを変更できませんでした。");
-    }
+    await switchCamera();
   }
 
   async function leaveRoom() {
@@ -185,6 +184,7 @@ export function ConsultationRoom({
             tracks={tracks}
             localParticipant={localParticipant}
             remoteParticipant={remoteParticipant}
+            isLocalCameraSwitching={isSwitchingCamera}
           />
 
           <CaptionOverlay
@@ -205,7 +205,7 @@ export function ConsultationRoom({
             </div>
           ) : null}
 
-          {sonioxError || controlError ? (
+          {sonioxError || controlError || cameraSwitchError ? (
             <div
               role="alert"
               className={cn(
@@ -214,7 +214,7 @@ export function ConsultationRoom({
               )}
             >
               <WarningCircle className="shrink-0" size={17} weight="fill" />
-              <span>{controlError ?? sonioxError}</span>
+              <span>{controlError ?? cameraSwitchError ?? sonioxError}</span>
             </div>
           ) : null}
         </main>
@@ -259,17 +259,28 @@ export function ConsultationRoom({
               )}
             </Button>
 
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="text-slate-100 hover:bg-white/10 hover:text-white md:hidden"
-              onClick={switchCamera}
-              disabled={!isCameraEnabled}
-              aria-label="カメラの向きを変更"
-            >
-              <CameraRotate size={21} weight="bold" />
-            </Button>
+            {canSwitchCamera ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-slate-100 hover:bg-white/10 hover:text-white"
+                onClick={switchFacingCamera}
+                disabled={!isCameraEnabled || isSwitchingCamera}
+                aria-label={
+                  isSwitchingCamera
+                    ? "カメラを切り替えています"
+                    : "前面と背面のカメラを切り替える"
+                }
+                aria-busy={isSwitchingCamera}
+              >
+                <CameraRotate
+                  className={cn(isSwitchingCamera && "animate-spin")}
+                  size={21}
+                  weight="bold"
+                />
+              </Button>
+            ) : null}
 
             <div className="mx-1 h-8 w-px bg-white/10" />
 

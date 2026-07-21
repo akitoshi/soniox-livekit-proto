@@ -6,7 +6,11 @@ import {
   type TrackReference,
   useSpeakingParticipants,
 } from "@livekit/components-react";
-import { MicrophoneSlash, VideoCameraSlash } from "@phosphor-icons/react";
+import {
+  MicrophoneSlash,
+  SpinnerGap,
+  VideoCameraSlash,
+} from "@phosphor-icons/react";
 import type { Participant } from "livekit-client";
 
 import { useParticipantMicrophoneMuted } from "@/hooks/use-participant-microphone-muted";
@@ -15,12 +19,14 @@ type PipVideoProps = {
   tracks: TrackReference[];
   localParticipant: Participant;
   remoteParticipant?: Participant;
+  isLocalCameraSwitching?: boolean;
 };
 
 export function PipVideo({
   tracks,
   localParticipant,
   remoteParticipant,
+  isLocalCameraSwitching = false,
 }: PipVideoProps) {
   const [isLocalMain, setIsLocalMain] = useState(false);
   const activeSpeakers = useSpeakingParticipants();
@@ -63,6 +69,7 @@ export function PipVideo({
           activeSpeakerIdentities.has(mainParticipant.identity)
         }
         isMicrophoneMuted={!mainParticipant.isLocal && isRemoteMuted}
+        isCameraSwitching={mainParticipant.isLocal && isLocalCameraSwitching}
       />
 
       {pipParticipant ? (
@@ -81,6 +88,7 @@ export function PipVideo({
               activeSpeakerIdentities.has(pipParticipant.identity)
             }
             isMicrophoneMuted={!pipParticipant.isLocal && isRemoteMuted}
+            isCameraSwitching={pipParticipant.isLocal && isLocalCameraSwitching}
           />
           <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/85 to-transparent px-2.5 pb-2 pt-6 text-left text-[11px] font-semibold text-slate-100">
             {pipParticipant.isLocal ? "自分" : "相手"}
@@ -101,12 +109,14 @@ function VideoSurface({
   className,
   isSpeaking,
   isMicrophoneMuted,
+  isCameraSwitching,
 }: {
   participant: Participant;
   track?: TrackReference;
   className: string;
   isSpeaking: boolean;
   isMicrophoneMuted: boolean;
+  isCameraSwitching: boolean;
 }) {
   return (
     <div className={className} data-speaking={isSpeaking}>
@@ -135,6 +145,17 @@ function VideoSurface({
         >
           <MicrophoneSlash aria-hidden="true" size={15} weight="bold" />
           <span>ミュート中</span>
+        </div>
+      ) : null}
+
+      {isCameraSwitching ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="pointer-events-none absolute inset-0 z-20 flex animate-[fade-in_120ms_ease-out] flex-col items-center justify-center gap-2 bg-slate-950/85 px-3 text-center text-xs font-semibold text-slate-100 backdrop-blur-sm"
+        >
+          <SpinnerGap className="animate-spin" size={20} weight="bold" />
+          <span>カメラ切替中</span>
         </div>
       ) : null}
     </div>
