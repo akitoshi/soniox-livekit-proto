@@ -28,13 +28,15 @@ import { ConnectionState, Track } from "livekit-client";
 import { CaptionHistory } from "@/components/room/caption-history";
 import { CaptionOverlay } from "@/components/room/caption-overlay";
 import { PipVideo } from "@/components/room/pip-video";
+import { SessionSettingsPopover } from "@/components/room/session-settings-popover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { useCaptionChannel } from "@/hooks/use-caption-channel";
 import { useCameraFacing } from "@/hooks/use-camera-facing";
-import type { SonioxLanguageCode } from "@/lib/languages";
+import { getLanguage, type SonioxLanguageCode } from "@/lib/languages";
+import type { SessionSettings } from "@/lib/session-settings";
 import type { ParticipantRole } from "@/lib/soniox-tokens";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +45,10 @@ type ConsultationRoomProps = {
   participantIdentity: string;
   participantName: string;
   role: ParticipantRole;
-  patientLanguage: SonioxLanguageCode;
+  sessionSettings: SessionSettings;
+  onSessionSettingsChange: (settings: SessionSettings) => void;
+  settingsError: string | null;
+  languageAnnouncement: SonioxLanguageCode | null;
 };
 
 export function ConsultationRoom({
@@ -51,7 +56,10 @@ export function ConsultationRoom({
   participantIdentity,
   participantName,
   role,
-  patientLanguage,
+  sessionSettings,
+  onSessionSettingsChange,
+  settingsError,
+  languageAnnouncement,
 }: ConsultationRoomProps) {
   const router = useRouter();
   const room = useRoomContext();
@@ -69,6 +77,10 @@ export function ConsultationRoom({
   } = useLocalParticipant({ room });
   const [captionsEnabled, setCaptionsEnabled] = useState(true);
   const [controlError, setControlError] = useState<string | null>(null);
+  const patientLanguage = sessionSettings.patientLanguage;
+  const announcedLanguage = languageAnnouncement
+    ? getLanguage(languageAnnouncement)
+    : undefined;
   const remoteParticipant = participants.find((participant) => !participant.isLocal);
   const {
     canSwitchCamera,
@@ -165,6 +177,17 @@ export function ConsultationRoom({
             >
               {isConnected ? "接続済み" : "接続中"}
             </Badge>
+            {role === "doctor" ? (
+              <SessionSettingsPopover
+                patientLanguage={patientLanguage}
+                onPatientLanguageChange={(nextLanguage) =>
+                  onSessionSettingsChange({
+                    ...sessionSettings,
+                    patientLanguage: nextLanguage,
+                  })
+                }
+              />
+            ) : null}
             <SheetTrigger asChild>
               <Button
                 variant="ghost"
@@ -205,7 +228,17 @@ export function ConsultationRoom({
             </div>
           ) : null}
 
-          {sonioxError || controlError || cameraSwitchError ? (
+          {role === "patient" && announcedLanguage ? (
+            <div
+              role="status"
+              aria-live="polite"
+              className="absolute bottom-24 right-4 z-30 rounded-xl border border-teal-200/20 bg-slate-900/92 px-3.5 py-2 text-xs font-medium text-teal-100 shadow-lg backdrop-blur"
+            >
+              字幕言語が{announcedLanguage.jaName}に変更されました
+            </div>
+          ) : null}
+
+          {sonioxError || controlError || cameraSwitchError || settingsError ? (
             <div
               role="alert"
               className={cn(
@@ -214,7 +247,7 @@ export function ConsultationRoom({
               )}
             >
               <WarningCircle className="shrink-0" size={17} weight="fill" />
-              <span>{controlError ?? cameraSwitchError ?? sonioxError}</span>
+              <span>{controlError ?? cameraSwitchError ?? settingsError ?? sonioxError}</span>
             </div>
           ) : null}
         </main>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { LiveKitRoom } from "@livekit/components-react";
+import { LiveKitRoom, useRoomContext } from "@livekit/components-react";
 import { ArrowLeft, Gear, SpinnerGap, WarningCircle } from "@phosphor-icons/react";
 
 import { ConsultationRoom } from "@/components/room/consultation-room";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import type { SonioxLanguageCode } from "@/lib/languages";
 import type { ParticipantRole } from "@/lib/soniox-tokens";
+import { useSessionSettings } from "@/hooks/use-session-settings";
 import { cn } from "@/lib/utils";
 
 type RoomClientProps = {
@@ -118,14 +119,49 @@ export function RoomClient({
       data-lk-theme="default"
       onError={(liveKitError) => setError({ message: liveKitError.message })}
     >
-      <ConsultationRoom
+      <SessionConfiguredConsultationRoom
         roomName={roomName}
         participantIdentity={config.identity}
         participantName={displayName}
         role={role}
-        patientLanguage={patientLanguage}
+        initialPatientLanguage={patientLanguage}
       />
     </LiveKitRoom>
+  );
+}
+
+function SessionConfiguredConsultationRoom({
+  roomName,
+  participantIdentity,
+  participantName,
+  role,
+  initialPatientLanguage,
+}: {
+  roomName: string;
+  participantIdentity: string;
+  participantName: string;
+  role: ParticipantRole;
+  initialPatientLanguage: SonioxLanguageCode;
+}) {
+  const room = useRoomContext();
+  const {
+    settings,
+    updateSettings,
+    settingsError,
+    languageAnnouncement,
+  } = useSessionSettings({ room, role, initialPatientLanguage });
+
+  return (
+    <ConsultationRoom
+      roomName={roomName}
+      participantIdentity={participantIdentity}
+      participantName={participantName}
+      role={role}
+      sessionSettings={settings}
+      onSessionSettingsChange={updateSettings}
+      settingsError={settingsError}
+      languageAnnouncement={languageAnnouncement}
+    />
   );
 }
 
